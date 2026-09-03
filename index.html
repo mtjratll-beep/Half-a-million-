@@ -80,6 +80,11 @@
         </main>
     </div>
 
+    <!-- عنصر صوتي احتياطي جاهز للعمل فوراً -->
+    <audio id="alert-sound" preload="auto">
+        <source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" type="audio/mpeg">
+    </audio>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -101,7 +106,6 @@
         let currentWorkerId = sessionStorage.getItem("worker_id");
         let currentWorkerName = sessionStorage.getItem("worker_name");
         let currentLang = localStorage.getItem("worker_lang") || "ar";
-        let audioCtx = null;
         let workerOrdersCache = {};
         let isFirstLoad = true;
         let deferredPrompt = null;
@@ -144,7 +148,7 @@
                 tabHistory: "الطلبات السابقة (المكتملة)",
                 logout: "خروج",
                 callCust: "📞 الاتصال بالعميل",
-                mapLoc: "🗺️ التوجه إلى الموقع",
+                mapLoc: "🗺️ فتح الموقع في الخرائط",
                 startMove: "🚗 بدء التحرك للعميل",
                 arrive: "📍 وصلت إلى موقع العميل",
                 finish: "✅ تم إنهاء الخدمة",
@@ -243,42 +247,12 @@
             }
         }
 
-        function initAutoAudio() {
-            try {
-                if (!audioCtx) {
-                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                }
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
-            } catch (e) {}
-        }
-        window.addEventListener('click', initAutoAudio, { once: true });
-        window.addEventListener('touchstart', initAutoAudio, { once: true });
-
-        function playWorkerSoundAndNotify(orderTitle) {
-            try {
-                if (!audioCtx) {
-                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                }
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
-
-                const now = audioCtx.currentTime;
-                [0, 0.2, 0.4].forEach((delay, index) => {
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(900 + (index * 150), now + delay);
-                    gain.gain.setValueAtTime(0.9, now + delay);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + delay + 0.15);
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.start(now + delay);
-                    osc.stop(now + delay + 0.15);
-                });
-            } catch (e) {}
+        function playAlertSound(orderTitle) {
+            const sound = document.getElementById('alert-sound');
+            if (sound) {
+                sound.currentTime = 0;
+                sound.play().catch(e => console.log("Audio play blocked by browser policy until interaction"));
+            }
 
             if ("Notification" in window && Notification.permission === "granted") {
                 try {
@@ -297,7 +271,6 @@
 
         document.getElementById('worker-login-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            initAutoAudio();
             const phone = document.getElementById('login-phone').value.trim();
             const pass = document.getElementById('login-pass').value.trim();
 
@@ -379,9 +352,12 @@
 
                         const phoneNum = order.customerPhone || order.custPhone || '';
                         const locText = order.location || order.custLocation || '';
-                        const locationText = encodeURIComponent(locText);
                         const callLink = `tel:${phoneNum}`;
-                        const mapLink = `https://www.google.com/maps/search/?api=1&query=${locationText}`;
+                        
+                        let mapLink = locText;
+                        if (!locText.startsWith('http://') && !locText.startsWith('https://')) {
+                            mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locText)}`;
+                        }
 
                         let actionButtons = '';
                         if (isFinished) {
@@ -413,14 +389,14 @@
                                 <div class="text-sm text-slate-700 space-y-1">
                                     <p><strong>العميل / Customer:</strong> ${custName}</p>
                                     <p><strong>السيارة / Car:</strong> ${carName} - ${carPlate}</p>
-                                    <p><strong>الموقع / Location:</strong> ${locText}</p>
+                                    <p><strong>الموقع / Location:</strong> <a href="${mapLink}" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline font-bold break-all">${locText}</a></p>
                                     <p><strong>الخدمة / Service:</strong> ${serviceType}</p>
                                 </div>
                                 <div class="grid grid-cols-2 gap-2 pt-1">
                                     <a href="${callLink}" class="bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-3 rounded-xl text-xs font-bold text-center transition flex items-center justify-center gap-1 shadow-sm">
                                         ${translations[currentLang].callCust}
                                     </a>
-                                    <a href="${mapLink}" target="_blank" class="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-3 rounded-xl text-xs font-bold text-center transition flex items-center justify-center gap-1 shadow-sm">
+                                    <a href="${mapLink}" target="_blank" rel="noopener noreferrer" class="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-3 rounded-xl text-xs font-bold text-center transition flex items-center justify-center gap-1 shadow-sm">
                                         ${translations[currentLang].mapLoc}
                                     </a>
                                 </div>
@@ -441,7 +417,7 @@
                 });
 
                 if (hasNewForMe) {
-                    playWorkerSoundAndNotify(newOrderDesc);
+                    playAlertSound(newOrderDesc);
                 }
 
                 workerOrdersCache = data;
