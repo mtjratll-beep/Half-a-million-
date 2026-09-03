@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة العامل - خدمة تغيير الزيت</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <!-- شاشة تسجيل الدخول للعامل -->
+    <div id="login-screen" class="flex items-center justify-center h-screen bg-slate-900 p-4">
+        <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md space-y-4 text-center">
+            <h2 id="txt-login-title" class="text-xl font-bold text-slate-800">تسجيل دخول العامل</h2>
+            <p id="txt-login-sub" class="text-xs text-slate-500">الرجاء إدخال رقم الجوال وكلمة المرور الخاصة بك</p>
+            <form id="worker-login-form" class="space-y-3 text-right">
+                <div>
+                    <label id="txt-phone-label" class="block text-xs font-medium text-slate-700">رقم الجوال</label>
+                    <input type="text" id="login-phone" required placeholder="05xxxxxxxx" class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <div>
+                    <label id="txt-pass-label" class="block text-xs font-medium text-slate-700">كلمة المرور</label>
+                    <input type="password" id="login-pass" required placeholder="كلمة المرور..." class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <button type="submit" id="txt-login-btn" class="w-full bg-emerald-600 text-white p-3 rounded-xl font-bold hover:bg-emerald-700 transition shadow">دخول لوحة العامل</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- لوحة تحكم العامل -->
+    <div id="worker-dashboard" class="hidden flex flex-col h-screen">
+        <header class="bg-slate-800 text-white p-4 flex flex-col md:flex-row justify-between items-center shadow gap-3">
+            <div>
+                <h1 id="worker-welcome-title" class="text-lg font-bold">مرحباً، جاري التحميل...</h1>
+                <span id="worker-current-status" class="text-xs bg-emerald-500 text-white px-2 py-0.5 rounded-full">الحالة: متاح</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <select id="lang-selector" onchange="changeLanguage(this.value)" class="bg-slate-700 text-white text-xs p-1.5 rounded-lg border border-slate-600 outline-none">
+                    <option value="ar">العربية</option>
+                    <option value="en">English</option>
+                    <option value="bn">বাংলা</option>
+                </select>
+                <button onclick="workerLogout()" id="btn-logout" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">خروج</button>
+            </div>
+        </header>
+
+        <!-- أزرار التنقل بين الطلبات الحالية والطلبات السابقة -->
+        <div class="bg-white border-b px-4 py-2 flex gap-2 justify-center shadow-sm">
+            <button onclick="switchTab('current')" id="tab-btn-current" class="px-4 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white transition">الطلبات الحالية</button>
+            <button onclick="switchTab('history')" id="tab-btn-history" class="px-4 py-1.5 rounded-lg text-xs font-bold bg-gray-200 text-slate-700 transition">الطلبات السابقة (المكتملة)</button>
+        </div>
+
+        <main class="flex-1 p-4 md:p-6 overflow-y-auto space-y-6 max-w-2xl mx-auto w-full">
+            <!-- أزرار تحديث الحالة (داخل / خارج الموقع) -->
+            <div id="status-box-section" class="bg-white p-4 rounded-xl shadow space-y-3">
+                <h3 id="txt-status-title" class="text-sm font-bold text-slate-700">تحديث حالتك الحالية للعمليات:</h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="updateWorkerStatus('خارج الموقع')" id="btn-out-site" class="bg-amber-500 hover:bg-amber-600 text-white p-3 rounded-xl font-bold text-xs md:text-sm transition shadow text-center">
+                        🚗 خارج الموقع (في الطريق)
+                    </button>
+                    <button onclick="updateWorkerStatus('داخل الموقع')" id="btn-in-site" class="bg-emerald-600 hover:bg-emerald-700 text-white p-3 rounded-xl font-bold text-xs md:text-sm transition shadow text-center">
+                        📍 داخل الموقع (وصلت)
+                    </button>
+                </div>
+            </div>
+
+            <!-- قسم الطلبات الحالية -->
+            <div id="section-current-orders" class="bg-white p-4 rounded-xl shadow space-y-4">
+                <h3 id="txt-orders-title" class="text-base font-bold text-slate-800 border-b pb-2">الطلبات المسندة إليك:</h3>
+                <div id="assigned-orders-container" class="space-y-4">
+                    <p class="text-slate-400 text-sm text-center py-4">جاري البحث عن طلبات جديدة...</p>
+                </div>
+            </div>
+
+            <!-- قسم الطلبات السابقة -->
+            <div id="section-history-orders" class="bg-white p-4 rounded-xl shadow space-y-4 hidden">
+                <h3 id="txt-history-title" class="text-base font-bold text-slate-800 border-b pb-2">سجل الطلبات السابقة المكتملة:</h3>
+                <div id="history-orders-container" class="space-y-4">
+                    <p class="text-slate-400 text-sm text-center py-4">لا توجد طلبات سابقة مكتملة حتى الآن.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- كود جافاسكريبت وتكامل السحابة -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCNgBpEMZ1WGQ9zkbJQDb9y6OJweFqWNpg",
+            authDomain: "half-27475.firebaseapp.com",
+            databaseURL: "https://half-27475-default-rtdb.firebaseio.com",
+            projectId: "half-27475",
+            storageBucket: "half-27475.firebasestorage.app",
+            messagingSenderId: "270803082259",
+            appId: "1:270803082259:web:eaa8ca526791b2280fb3e6",
+            measurementId: "G-B31TSL4WN9"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let currentWorkerId = sessionStorage.getItem("worker_id");
+        let currentWorkerName = sessionStorage.getItem("worker_name");
+        let currentLang = localStorage.getItem("worker_lang") || "ar";
+        let audioCtx = null;
+        let workerOrdersCache = {};
+        let isFirstLoad = true;
+
+        const translations = {
+            ar: {
+                loginTitle: "تسجيل دخول العامل",
+                loginSub: "الرجاء إدخال رقم الجوال وكلمة المرور الخاصة بك",
+                phoneLabel: "رقم الجوال",
+                passLabel: "كلمة المرور",
+                loginBtn: "دخول لوحة العامل",
+                statusTitle: "تحديث حالتك الحالية للعمليات:",
+                btnOut: "🚗 خارج الموقع (في الطريق)",
+                btnIn: "📍 داخل الموقع (وصلت)",
+                ordersTitle: "الطلبات المسندة إليك:",
+                historyTitle: "سجل الطلبات السابقة المكتملة:",
+                tabCurrent: "الطلبات الحالية",
+                tabHistory: "الطلبات السابقة (المكتملة)",
+                logout: "خروج",
+                callCust: "📞 الاتصال بالعميل",
+                mapLoc: "🗺️ التوجه إلى الموقع",
+                startMove: "🚗 بدء التحرك للعميل",
+                arrive: "📍 وصلت إلى موقع العميل",
+                finish: "✅ تم إنهاء الخدمة",
+                finishedBadge: "تم الانتهاء"
+            },
+            en: {
+                loginTitle: "Worker Login",
+                loginSub: "Please enter your mobile number and password",
+                phoneLabel: "Mobile Number",
+                passLabel: "Password",
+                loginBtn: "Login to Dashboard",
+                statusTitle: "Update Your Current Status:",
+                btnOut: "🚗 Out of Site (On the way)",
+                btnIn: "📍 In Site (Arrived)",
+                ordersTitle: "Assigned Orders:",
+                historyTitle: "Completed Orders History:",
+                tabCurrent: "Current Orders",
+                tabHistory: "Previous Orders",
+                logout: "Logout",
+                callCust: "📞 Call Customer",
+                mapLoc: "🗺️ Open Map Location",
+                startMove: "🚗 Start Moving",
+                arrive: "📍 Arrived at Location",
+                finish: "✅ Complete Service",
+                finishedBadge: "Finished"
+            },
+            bn: {
+                loginTitle: "কর্মী লগইন",
+                loginSub: "দয়া করে আপনার মোবাইল নম্বর এবং পাসওয়ার্ড দিন",
+                phoneLabel: "মোবাইল নম্বর",
+                passLabel: "পাসওয়ার্ড",
+                loginBtn: "লগইন করুন",
+                statusTitle: "আপনার বর্তমান স্থিতি আপডেট করুন:",
+                btnOut: "🚗 সাইটের বাইরে (পথে আছি)",
+                btnIn: "📍 সাইটে পৌঁছেছি",
+                ordersTitle: "আপনার অর্ডারসমূহ:",
+                historyTitle: "পূর্ববর্তী সম্পন্ন অর্ডারসমূহ:",
+                tabCurrent: "বর্তমান অর্ডার",
+                tabHistory: "পূর্ববর্তী অর্ডার",
+                logout: "লগআউট",
+                callCust: "📞 গ্রাহককে কল করুন",
+                mapLoc: "🗺️ মানচিত্র খুলুন",
+                startMove: "🚗 চলা শুরু করুন",
+                arrive: "📍 লোকেশনে পৌঁছেছি",
+                finish: "✅ সেবা সম্পন্ন করুন",
+                finishedBadge: "সম্পন্ন"
+            }
+        };
+
+        window.changeLanguage = function(lang) {
+            currentLang = lang;
+            localStorage.setItem("worker_lang", lang);
+            applyTranslations();
+        }
+
+        function applyTranslations() {
+            const t = translations[currentLang];
+            document.documentElement.lang = currentLang;
+            document.documentElement.dir = currentLang === 'en' ? 'ltr' : 'rtl';
+
+            if(document.getElementById('txt-login-title')) document.getElementById('txt-login-title').innerText = t.loginTitle;
+            if(document.getElementById('txt-login-sub')) document.getElementById('txt-login-sub').innerText = t.loginSub;
+            if(document.getElementById('txt-phone-label')) document.getElementById('txt-phone-label').innerText = t.phoneLabel;
+            if(document.getElementById('txt-pass-label')) document.getElementById('txt-pass-label').innerText = t.passLabel;
+            if(document.getElementById('txt-login-btn')) document.getElementById('txt-login-btn').innerText = t.loginBtn;
+            if(document.getElementById('txt-status-title')) document.getElementById('txt-status-title').innerText = t.statusTitle;
+            if(document.getElementById('btn-out-site')) document.getElementById('btn-out-site').innerText = t.btnOut;
+            if(document.getElementById('btn-in-site')) document.getElementById('btn-in-site').innerText = t.btnIn;
+            if(document.getElementById('txt-orders-title')) document.getElementById('txt-orders-title').innerText = t.ordersTitle;
+            if(document.getElementById('txt-history-title')) document.getElementById('txt-history-title').innerText = t.historyTitle;
+            if(document.getElementById('tab-btn-current')) document.getElementById('tab-btn-current').innerText = t.tabCurrent;
+            if(document.getElementById('tab-btn-history')) document.getElementById('tab-btn-history').innerText = t.tabHistory;
+            if(document.getElementById('btn-logout')) document.getElementById('btn-logout').innerText = t.logout;
+            document.getElementById('lang-selector').value = currentLang;
+        }
+
+        window.switchTab = function(tab) {
+            const currentSec = document.getElementById('section-current-orders');
+            const historySec = document.getElementById('section-history-orders');
+            const btnCurr = document.getElementById('tab-btn-current');
+            const btnHist = document.getElementById('tab-btn-history');
+
+            if(tab === 'current') {
+                currentSec.classList.remove('hidden');
+                historySec.classList.add('hidden');
+                btnCurr.className = "px-4 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white transition";
+                btnHist.className = "px-4 py-1.5 rounded-lg text-xs font-bold bg-gray-200 text-slate-700 transition";
+            } else {
+                currentSec.classList.add('hidden');
+                historySec.classList.remove('hidden');
+                btnHist.className = "px-4 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white transition";
+                btnCurr.className = "px-4 py-1.5 rounded-lg text-xs font-bold bg-gray-200 text-slate-700 transition";
+            }
+        }
+
+        function initAutoAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+        window.addEventListener('click', initAutoAudio, { once: true });
+        window.addEventListener('touchstart', initAutoAudio, { once: true });
+
+        function playWorkerSound(type) {
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                const now = audioCtx.currentTime;
+                if (type === 'new-order') {
+                    [0, 0.2, 0.4].forEach((delay, index) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(900 + (index * 150), now + delay);
+                        gain.gain.setValueAtTime(0.9, now + delay);
+                        gain.gain.exponentialRampToValueAtTime(0.01, now + delay + 0.15);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start(now + delay);
+                        osc.stop(now + delay + 0.15);
+                    });
+                }
+            } catch (e) {
+                console.log("Audio error:", e);
+            }
+        }
+
+        if (currentWorkerId && currentWorkerName) {
+            showDashboard(currentWorkerName);
+        }
+        applyTranslations();
+
+        document.getElementById('worker-login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            initAutoAudio();
+            const phone = document.getElementById('login-phone').value.trim();
+            const pass = document.getElementById('login-pass').value.trim();
+
+            onValue(ref(db, 'workers'), (snapshot) => {
+                const workers = snapshot.val();
+                let foundId = null;
+                let foundWorker = null;
+
+                if (workers) {
+                    Object.entries(workers).forEach(([id, w]) => {
+                        if (w.phone === phone && w.pass === pass) {
+                            foundId = id;
+                            foundWorker = w;
+                        }
+                    });
+                }
+
+                if (foundWorker) {
+                    sessionStorage.setItem("worker_id", foundId);
+                    sessionStorage.setItem("worker_name", foundWorker.name);
+                    currentWorkerId = foundId;
+                    currentWorkerName = foundWorker.name;
+                    showDashboard(foundWorker.name);
+                } else {
+                    alert("رقم الجوال أو كلمة المرور غير صحيحة!");
+                }
+            }, { onlyOnce: true });
+        });
+
+        function showDashboard(name) {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('worker-dashboard').classList.remove('hidden');
+            document.getElementById('worker-welcome-title').innerText = `مرحباً بك، الكابتن ${name}`;
+            listenToAssignedOrders(name);
+        }
+
+        window.workerLogout = function() {
+            sessionStorage.clear();
+            location.reload();
+        }
+
+        window.updateWorkerStatus = function(statusText) {
+            if (!currentWorkerId) return;
+            update(ref(db, `workers/${currentWorkerId}`), { status: statusText }).then(() => {
+                document.getElementById('worker-current-status').innerText = `الحالة: ${statusText}`;
+            });
+        }
+
+        function listenToAssignedOrders(workerName) {
+            onValue(ref(db, 'orders'), (snapshot) => {
+                const data = snapshot.val() || {};
+                const container = document.getElementById('assigned-orders-container');
+                const historyContainer = document.getElementById('history-orders-container');
+                container.innerHTML = '';
+                historyContainer.innerHTML = '';
+
+                let hasNewForMe = false;
+                let myOrdersCount = 0;
+                let myHistoryCount = 0;
+
+                Object.entries(data).forEach(([id, order]) => {
+                    if (order.assignedWorkerName === workerName) {
+                        const isFinished = order.status === 'تم الانتهاء' || order.status === 'Finished';
+                        
+                        if (!isFirstLoad && !workerOrdersCache[id] && !isFinished) {
+                            hasNewForMe = true;
+                        }
+
+                        const phoneNum = order.customerPhone || '';
+                        const locationText = encodeURIComponent(order.location || '');
+                        const callLink = `tel:${phoneNum}`;
+                        const mapLink = `https://www.google.com/maps/search/?api=1&query=${locationText}`;
+
+                        let actionButtons = '';
+                        if (order.status === 'تم إرسال الطلب') {
+                            actionButtons = `<button onclick="updateOrderStatus('${id}', 'تحرك العامل')" class="w-full bg-amber-500 hover:bg-amber-600 text-white py-2 rounded-xl text-xs font-bold transition shadow mb-2">${translations[currentLang].startMove}</button>`;
+                        } else if (order.status === 'تحرك العامل') {
+                            actionButtons = `<button onclick="updateOrderStatus('${id}', 'وصل العامل')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl text-xs font-bold transition shadow mb-2">${translations[currentLang].arrive}</button>`;
+                        } else if (order.status === 'وصل العامل') {
+                            actionButtons = `<button onclick="updateOrderStatus('${id}', 'تم الانتهاء')" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-xl text-xs font-bold transition shadow mb-2">${translations[currentLang].finish}</button>`;
+                        } else {
+                            actionButtons = `<div class="text-center text-green-700 font-bold text-xs py-2 bg-green-50 rounded-xl">✨ ${translations[currentLang].finishedBadge}</div>`;
+                        }
+
+                        const cardHtml = `
+                            <div class="border rounded-xl p-4 bg-slate-50 space-y-3 shadow-sm">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-mono font-bold text-xs text-blue-600">#${id.slice(-5)}</span>
+                                    <span class="text-xs bg-slate-200 px-2 py-0.5 rounded font-bold">${order.status}</span>
+                                </div>
+                                <div class="text-sm text-slate-700 space-y-1">
+                                    <p><strong>العميل / Customer:</strong> ${order.customerName}</p>
+                                    <p><strong>السيارة / Car:</strong> ${order.carName} - ${order.carPlate}</p>
+                                    <p><strong>الموقع / Location:</strong> ${order.location}</p>
+                                    <p><strong>الخدمة / Service:</strong> ${order.serviceType}</p>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2 pt-1">
+                                    <a href="${callLink}" class="bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-3 rounded-xl text-xs font-bold text-center transition flex items-center justify-center gap-1 shadow-sm">
+                                        ${translations[currentLang].callCust}
+                                    </a>
+                                    <a href="${mapLink}" target="_blank" class="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-3 rounded-xl text-xs font-bold text-center transition flex items-center justify-center gap-1 shadow-sm">
+                                        ${translations[currentLang].mapLoc}
+                                    </a>
+                                </div>
+                                <div class="pt-2 border-t">
+                                    ${actionButtons}
+                                </div>
+                            </div>
+                        `;
+
+                        if (isFinished) {
+                            myHistoryCount++;
+                            historyContainer.innerHTML += cardHtml;
+                        } else {
+                            myOrdersCount++;
+                            container.innerHTML += cardHtml;
+                        }
+                    }
+                });
+
+                if (hasNewForMe) {
+                    playWorkerSound('new-order');
+                }
+
+                workerOrdersCache = data;
+                isFirstLoad = false;
+
+                if (myOrdersCount === 0) {
+                    container.innerHTML = `<p class="text-slate-400 text-sm text-center py-4">لا توجد طلبات جارية حالياً</p>`;
+                }
+                if (myHistoryCount === 0) {
+                    historyContainer.innerHTML = `<p class="text-slate-400 text-sm text-center py-4">لا توجد طلبات سابقة مكتملة</p>`;
+                }
+            });
+        }
+
+        window.updateOrderStatus = function(orderId, newStatus) {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+            
+            let updateData = { status: newStatus };
+            if (newStatus === 'تحرك العامل') updateData.timeMoving = timeString;
+            if (newStatus === 'وصل العامل') updateData.timeArrived = timeString;
+            if (newStatus === 'تم الانتهاء') updateData.timeFinished = timeString;
+
+            update(ref(db, `orders/${orderId}`), updateData).then(() => {
+                if (newStatus === 'تم الانتهاء') {
+                    switchTab('history');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

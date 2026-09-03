@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة المدير - خدمة تغيير الزيت</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printable-report, #printable-report * {
+                visibility: visible;
+            }
+            #printable-report {
+                position: absolute;
+                right: 0;
+                top: 0;
+                width: 100%;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+    <script>
+        // التحقق الصارم من كلمة المرور عند فتح الصفحة بالشكل المطلوب
+        (function() {
+            let entered = sessionStorage.getItem("admin_logged");
+            
+            if (entered !== "true") {
+                let password = prompt("الرجاء إدخال كلمة سر صفحة المدير:");
+                if (password === "Half a million1122") {
+                    sessionStorage.setItem("admin_logged", "true");
+                } else {
+                    alert("كلمة السر غير صحيحة!");
+                    document.body.innerHTML = "<div style='text-align:center; margin-top:20vh; font-family:tahoma; color:red;'><h2>عذراً، كلمة المرور غير صحيحة. تم رفض الوصول.</h2></div>";
+                    throw new Error("Unauthorized");
+                }
+            }
+        })();
+
+        function logout() {
+            sessionStorage.removeItem("admin_logged");
+            location.reload();
+        }
+    </script>
+</head>
+<body class="bg-slate-900 font-sans">
+
+    <!-- شاشة تسجيل الدخول بتصميم المربع تماماً مثل الصورة -->
+    <div id="login-screen" class="hidden"></div>
+
+    <div class="flex flex-col md:flex-row h-screen overflow-hidden bg-gray-100">
+        <!-- الشريط الجانبي (متجاوب للجوال والكمبيوتر) -->
+        <div class="w-full md:w-64 bg-slate-800 text-white flex flex-col justify-between p-4 shrink-0">
+            <div>
+                <h1 class="text-xl font-bold mb-4 md:mb-6 text-center text-amber-400">نظام تغيير الزيت</h1>
+                <nav class="flex md:flex-col flex-wrap gap-1 md:space-y-2 justify-center">
+                    <button onclick="switchTab('home')" class="flex-1 md:w-full text-center md:text-right py-2 px-3 md:px-4 rounded hover:bg-slate-700 transition text-sm md:text-base font-medium">🏠 الرئيسية</button>
+                    <button onclick="switchTab('new-order')" class="flex-1 md:w-full text-center md:text-right py-2 px-3 md:px-4 rounded hover:bg-slate-700 transition text-sm md:text-base font-medium">➕ طلب</button>
+                    <button onclick="switchTab('all-orders')" class="flex-1 md:w-full text-center md:text-right py-2 px-3 md:px-4 rounded hover:bg-slate-700 transition text-sm md:text-base font-medium">📋 الطلبات</button>
+                    <button onclick="switchTab('workers')" class="flex-1 md:w-full text-center md:text-right py-2 px-3 md:px-4 rounded hover:bg-slate-700 transition text-sm md:text-base font-medium">👷 العمال وكلمات المرور</button>
+                    <button onclick="switchTab('reports')" class="flex-1 md:w-full text-center md:text-right py-2 px-3 md:px-4 rounded hover:bg-slate-700 transition text-sm md:text-base font-medium">📊 التقارير والطباعة</button>
+                    <button onclick="switchTab('settings')" class="flex-1 md:w-full text-center md:text-right py-2 px-3 md:px-4 rounded hover:bg-slate-700 transition text-sm md:text-base font-medium">⚙️ الإعدادات</button>
+                </nav>
+            </div>
+            <div class="hidden md:block mt-4">
+                <button onclick="logout()" class="w-full text-right py-2.5 px-4 rounded bg-red-600 hover:bg-red-700 transition font-bold">🚪 تسجيل الخروج</button>
+            </div>
+        </div>
+
+        <!-- محتوى الصفحة -->
+        <div class="flex-1 flex flex-col overflow-y-auto">
+            <header class="bg-white shadow p-4 flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <h2 id="page-title" class="text-lg md:text-xl font-semibold text-gray-800">الرئيسية</h2>
+                </div>
+                <span class="text-xs md:text-sm bg-blue-100 text-blue-800 font-bold px-3 py-1 rounded-full">مدير النظام</span>
+            </header>
+
+            <main class="p-4 md:p-6">
+                <!-- قسم الرئيسية (الإحصائيات) -->
+                <div id="tab-home" class="tab-content space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-white p-4 rounded-lg shadow border-r-4 border-blue-500">
+                            <p class="text-gray-500 text-sm">إجمالي الطلبات</p>
+                            <h3 id="stat-total" class="text-2xl font-bold text-slate-800">0</h3>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow border-r-4 border-amber-500">
+                            <p class="text-gray-500 text-sm">الطلبات الجارية</p>
+                            <h3 id="stat-active" class="text-2xl font-bold text-slate-800">0</h3>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow border-r-4 border-green-500">
+                            <p class="text-gray-500 text-sm">الطلبات المكتملة</p>
+                            <h3 id="stat-completed" class="text-2xl font-bold text-slate-800">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- قسم إنشاء طلب -->
+                <div id="tab-new-order" class="tab-content hidden bg-white p-6 rounded-lg shadow max-w-2xl mx-auto">
+                    <h3 class="text-lg font-bold mb-4 text-slate-800">إنشاء طلب جديد وإسناده لعامل</h3>
+                    <form id="order-form" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700">اسم العميل</label>
+                                <input type="text" id="cust-name" required class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700">رقم الجوال</label>
+                                <input type="text" id="cust-phone" required class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700">اسم السيارة / النوع</label>
+                                <input type="text" id="car-name" required class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700">رقم اللوحة</label>
+                                <input type="text" id="car-plate" required class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">العنوان / الموقع</label>
+                            <input type="text" id="cust-location" required class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="مثال: الرياض، حي الملقا...">
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700">الخدمة المطلوبة</label>
+                                <select id="service-type" class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="تغيير زيت المحرك">تغيير زيت المحرك</option>
+                                    <option value="تغيير زيت وفلتر">تغيير زيت وفلتر</option>
+                                    <option value="فحص دوري">فحص دوري</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700">إسناد إلى عامل</label>
+                                <select id="assigned-worker" class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500" required></select>
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full bg-blue-600 text-white p-3 rounded-xl font-bold hover:bg-blue-700 transition shadow">إرسال الطلب للسحابة</button>
+                    </form>
+                </div>
+
+                <!-- قسم جميع الطلبات -->
+                <div id="tab-all-orders" class="tab-content hidden bg-white p-4 md:p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-bold mb-4 text-slate-800">قائمة جميع الطلبات والحالات اللحظية</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right border-collapse min-w-[700px]">
+                            <thead>
+                                <tr class="bg-gray-100 border-b text-xs text-slate-700 font-bold">
+                                    <th class="p-3">رقم الطلب</th>
+                                    <th class="p-3">العميل</th>
+                                    <th class="p-3">السيارة</th>
+                                    <th class="p-3">العامل المسند</th>
+                                    <th class="p-3">الحالة الحالية</th>
+                                    <th class="p-3">التفاصيل والأوقات</th>
+                                    <th class="p-3 text-center">إجراء الحذف</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orders-table-body" class="text-sm"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- قسم التقارير والطباعة -->
+                <div id="tab-reports" class="tab-content hidden bg-white p-6 rounded-lg shadow space-y-6">
+                    <div class="no-print flex flex-col md:flex-row gap-4 items-end bg-slate-50 p-4 rounded-xl border">
+                        <div class="flex-1 w-full">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">تحديد حسب اليوم:</label>
+                            <input type="date" id="report-date-filter" class="w-full p-2 border rounded-lg bg-white text-sm">
+                        </div>
+                        <div class="flex-1 w-full">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">تحديد حسب الشهر:</label>
+                            <input type="month" id="report-month-filter" class="w-full p-2 border rounded-lg bg-white text-sm">
+                        </div>
+                        <div class="flex gap-2 w-full md:w-auto">
+                            <button onclick="filterReport()" class="flex-1 md:flex-none bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition">عرض التقرير</button>
+                            <button onclick="window.print()" class="flex-1 md:flex-none bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-700 transition flex items-center justify-center gap-1">🖨️ طباعة التقرير</button>
+                        </div>
+                    </div>
+
+                    <!-- المنطقة القابلة للطباعة -->
+                    <div id="printable-report" class="bg-white p-4 rounded-xl space-y-4">
+                        <div class="text-center border-b pb-4">
+                            <h3 class="text-xl font-bold text-slate-800">تقرير نظام تغيير الزيت (سجل العمليات)</h3>
+                            <p id="report-period-label" class="text-sm text-slate-500 mt-1">جميع الطلبات المسجلة في النظام</p>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-right border-collapse min-w-[600px] border border-slate-200">
+                                <thead>
+                                    <tr class="bg-slate-100 border-b text-xs text-slate-800 font-bold">
+                                        <th class="p-2.5 border">رقم الطلب</th>
+                                        <th class="p-2.5 border">التاريخ واليوم</th>
+                                        <th class="p-2.5 border">العميل</th>
+                                        <th class="p-2.5 border">السيارة</th>
+                                        <th class="p-2.5 border">العامل</th>
+                                        <th class="p-2.5 border">الحالة</th>
+                                        <th class="p-2.5 border">الأوقات التفصيلية</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="report-table-body" class="text-xs text-slate-700">
+                                    <!-- تعبئة تلقائية -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- قسم العمال وإدارة كلمات المرور -->
+                <div id="tab-workers" class="tab-content hidden bg-white p-6 rounded-lg shadow max-w-xl mx-auto space-y-6">
+                    <div>
+                        <h3 class="text-lg font-bold mb-4 text-slate-800 border-b pb-3">إضافة عامل جديد وكلمة المرور</h3>
+                        <form id="worker-form" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700">اسم العامل</label>
+                                <input type="text" id="worker-name" required placeholder="أدخل اسم العامل..." class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700">رقم الجوال (معرف الدخول)</label>
+                                <input type="text" id="worker-phone" required placeholder="05xxxxxxxx" class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700">كلمة المرور</label>
+                                <input type="password" id="worker-pass" required placeholder="كلمة المرور الخاصة بالعامل..." class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <button type="submit" class="w-full bg-emerald-600 text-white py-2.5 rounded-xl text-sm font-bold hover:bg-emerald-700 transition shadow">حفظ وإضافة العامل للسحابة</button>
+                        </form>
+                    </div>
+
+                    <div class="border-t pt-4">
+                        <h4 class="font-bold text-slate-700 mb-3 text-sm">قائمة العمال المسجلين حالياً:</h4>
+                        <ul id="workers-list" class="divide-y divide-gray-100 bg-slate-50 rounded-xl p-3">
+                            <li class="text-slate-400 text-sm text-center py-2">جاري تحميل العمال...</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- الإعدادات -->
+                <div id="tab-settings" class="tab-content hidden bg-white p-6 rounded-lg shadow max-w-lg mx-auto">
+                    <h3 class="text-lg font-bold mb-4 text-slate-800">إعدادات النظام والحساب</h3>
+                    <p class="text-gray-600 text-sm">المشروع مرتبط بخدمات سحابية مباشرة: <span class="font-mono text-xs bg-gray-100 p-1 rounded font-bold">half-27475</span></p>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- كود الجافاسكريبت والتنبيهات الإجبارية التلقائية -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCNgBpEMZ1WGQ9zkbJQDb9y6OJweFqWNpg",
+            authDomain: "half-27475.firebaseapp.com",
+            databaseURL: "https://half-27475-default-rtdb.firebaseio.com",
+            projectId: "half-27475",
+            storageBucket: "half-27475.firebasestorage.app",
+            messagingSenderId: "270803082259",
+            appId: "1:270803082259:web:eaa8ca526791b2280fb3e6",
+            measurementId: "G-B31TSL4WN9"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let allOrdersCache = {};
+        let isInitialLoad = true;
+        let audioCtx = null;
+
+        // تشغيل النغمة بشكل إجباري وتلقائي عند أي تفاعل في الصفحة
+        function initAutoAudio() {
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            } catch (e) {}
+        }
+        window.addEventListener('pointerdown', initAutoAudio, { once: true });
+        window.addEventListener('keydown', initAutoAudio, { once: true });
+
+        function playSound(type) {
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                const now = audioCtx.currentTime;
+                if (type === 'new-order') {
+                    [0, 0.2, 0.4].forEach((delay, index) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(880 + (index * 220), now + delay);
+                        gain.gain.setValueAtTime(0.8, now + delay);
+                        gain.gain.exponentialRampToValueAtTime(0.01, now + delay + 0.15);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start(now + delay);
+                        osc.stop(now + delay + 0.15);
+                    });
+                }
+            } catch (e) {}
+        }
+
+        // التنقل بين الأقسام
+        window.switchTab = function(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            
+            const titles = {
+                'home': 'الرئيسية والإحصائيات',
+                'new-order': 'إنشاء طلب جديد',
+                'all-orders': 'قائمة الطلبات',
+                'workers': 'إدارة العمال وكلمات المرور',
+                'reports': 'التقارير والطباعة',
+                'settings': 'إعدادات النظام'
+            };
+            document.getElementById('page-title').innerText = titles[tabId] || 'لوحة التحكم';
+        }
+
+        // دالة حذف الطلب من السحابة
+        window.deleteOrder = function(orderId) {
+            if (confirm("هل أنت متأكد من حذف هذا الطلب نهائياً؟")) {
+                remove(ref(db, `orders/${orderId}`)).then(() => {
+                    alert("تم حذف الطلب بنجاح.");
+                }).catch((error) => {
+                    alert("حدث خطأ أثناء الحذف: " + error.message);
+                });
+            }
+        }
+
+        // جلب البيانات ومراقبة الطلبات الجديدة لتشغيل النغمة تلقائياً
+        onValue(ref(db, 'orders'), (snapshot) => {
+            const data = snapshot.val() || {};
+            
+            if (!isInitialLoad) {
+                const oldKeys = Object.keys(allOrdersCache);
+                const newKeys = Object.keys(data);
+                if (newKeys.length > oldKeys.length) {
+                    playSound('new-order');
+                }
+            }
+            
+            allOrdersCache = data;
+            isInitialLoad = false;
+            updateUI(data);
+        });
+
+        // جلب قائمة العمال
+        onValue(ref(db, 'workers'), (snapshot) => {
+            const data = snapshot.val() || {};
+            const workerSelect = document.getElementById('assigned-worker');
+            const workersList = document.getElementById('workers-list');
+            
+            workerSelect.innerHTML = '';
+            workersList.innerHTML = '';
+
+            let count = 0;
+            Object.entries(data).forEach(([id, w]) => {
+                count++;
+                workerSelect.innerHTML += `<option value="${w.name}">${w.name} (${w.phone})</option>`;
+                
+                workersList.innerHTML += `
+                    <li class="py-2.5 flex justify-between items-center text-xs text-slate-700">
+                        <div>
+                            <span class="font-bold text-slate-900">${w.name}</span>
+                            <span class="text-slate-500 mr-2">(${w.phone})</span>
+                        </div>
+                        <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">مرتبط</span>
+                    </li>
+                `;
+            });
+
+            if (count === 0) {
+                workerSelect.innerHTML = `<option value="">لا توجد عمالة مسجلة</option>`;
+                workersList.innerHTML = `<li class="text-slate-400 text-sm text-center py-2">لا توجد عمالة مسجلة بعد</li>`;
+            }
+        });
+
+        function updateUI(orders) {
+            let total = 0, active = 0, completed = 0;
+            const tableBody = document.getElementById('orders-table-body');
+            const reportBody = document.getElementById('report-table-body');
+            tableBody.innerHTML = '';
+            reportBody.innerHTML = '';
+
+            Object.entries(orders).forEach(([id, o]) => {
+                total++;
+                const isFinished = o.status === 'تم الانتهاء' || o.status === 'Finished';
+                if (isFinished) completed++;
+                else active++;
+
+                const rowHtml = `
+                    <tr class="border-b hover:bg-slate-50 transition">
+                        <td class="p-3 font-mono font-bold text-blue-600">#${id.slice(-5)}</td>
+                        <td class="p-3 font-medium">${o.custName || o.customerName}</td>
+                        <td class="p-3">${o.carName} (${o.carPlate})</td>
+                        <td class="p-3 font-semibold text-slate-700">${o.assignedWorker || o.assignedWorkerName || 'غير مسند'}</td>
+                        <td class="p-3">
+                            <span class="px-2 py-1 rounded-full text-xs font-bold ${isFinished ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}">
+                                ${o.status}
+                            </span>
+                        </td>
+                        <td class="p-3 text-xs text-slate-500">${o.custLocation || o.location || 'غير متوفر'}</td>
+                        <td class="p-3 text-center">
+                            <button onclick="deleteOrder('${id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold transition shadow">🗑️ حذف</button>
+                        </td>
+                    </tr>
+                `;
+                tableBody.innerHTML += rowHtml;
+
+                reportBody.innerHTML += `
+                    <tr class="border-b">
+                        <td class="p-2.5 border font-mono">#${id.slice(-5)}</td>
+                        <td class="p-2.5 border">${new Date(o.timestamp || Date.now()).toLocaleDateString('ar-SA')}</td>
+                        <td class="p-2.5 border">${o.custName || o.customerName}</td>
+                        <td class="p-2.5 border">${o.carName}</td>
+                        <td class="p-2.5 border">${o.assignedWorker || o.assignedWorkerName || 'غير مسند'}</td>
+                        <td class="p-2.5 border">${o.status}</td>
+                        <td class="p-2.5 border text-slate-500">تحرك: ${o.timeMoving || '-'} | وصل: ${o.timeArrived || '-'} | انتهى: ${o.timeFinished || '-'}</td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-active').innerText = active;
+            document.getElementById('stat-completed').innerText = completed;
+
+            if (total === 0) {
+                tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400">لا توجد طلبات مسجلة حتى الآن</td></tr>`;
+            }
+        }
+
+        // إضافة طلب جديد
+        document.getElementById('order-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const newOrder = {
+                custName: document.getElementById('cust-name').value.trim(),
+                custPhone: document.getElementById('cust-phone').value.trim(),
+                carName: document.getElementById('car-name').value.trim(),
+                carPlate: document.getElementById('car-plate').value.trim(),
+                custLocation: document.getElementById('cust-location').value.trim(),
+                serviceType: document.getElementById('service-type').value,
+                assignedWorker: document.getElementById('assigned-worker').value,
+                status: 'تم إرسال الطلب',
+                timestamp: Date.now()
+            };
+
+            push(ref(db, 'orders'), newOrder).then(() => {
+                alert("تم إرسال الطلب بنجاح وإسناده للعامل!");
+                document.getElementById('order-form').reset();
+                switchTab('all-orders');
+            });
+        });
+
+        // إضافة عامل جديد وكلمة المرور
+        document.getElementById('worker-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const newWorker = {
+                name: document.getElementById('worker-name').value.trim(),
+                phone: document.getElementById('worker-phone').value.trim(),
+                pass: document.getElementById('worker-pass').value.trim(),
+                status: 'متاح'
+            };
+
+            push(ref(db, 'workers'), newWorker).then(() => {
+                alert("تم حفظ العامل الجديد وكلمة المرور بنجاح!");
+                document.getElementById('worker-form').reset();
+            });
+        });
+    </script>
+</body>
+</html>
