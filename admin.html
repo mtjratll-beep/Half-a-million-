@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة المدير - خدمة تغيير الزيت</title>
+    <!-- إضافة الشعار الأيقونة للموقع -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230f172a'/><text x='50' y='65' font-size='50' font-weight='bold' text-anchor='middle' fill='%2338bdf8' font-family='Arial'>1/2</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230f172a'/><text x='50' y='65' font-size='50' font-weight='bold' text-anchor='middle' fill='%2338bdf8' font-family='Arial'>1/2</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @media print {
@@ -25,7 +28,6 @@
         }
     </style>
     <script>
-        // التحقق الصارم من كلمة المرور عند فتح الصفحة بالشكل المطلوب
         (function() {
             let entered = sessionStorage.getItem("admin_logged");
             
@@ -49,14 +51,15 @@
 </head>
 <body class="bg-slate-900 font-sans">
 
-    <!-- شاشة تسجيل الدخول بتصميم المربع تماماً مثل الصورة -->
     <div id="login-screen" class="hidden"></div>
 
     <div class="flex flex-col md:flex-row h-screen overflow-hidden bg-gray-100">
-        <!-- الشريط الجانبي (متجاوب للجوال والكمبيوتر) -->
         <div class="w-full md:w-64 bg-slate-800 text-white flex flex-col justify-between p-4 shrink-0">
             <div>
-                <h1 class="text-xl font-bold mb-4 md:mb-6 text-center text-amber-400">نظام تغيير الزيت</h1>
+                <div class="flex items-center justify-center gap-2 mb-4 md:mb-6">
+                    <div class="w-9 h-9 rounded-xl bg-sky-500 flex items-center justify-center font-bold text-white text-lg shadow">½</div>
+                    <h1 class="text-xl font-bold text-amber-400">نظام تغيير الزيت</h1>
+                </div>
                 <nav class="flex md:flex-col flex-wrap gap-1 md:space-y-2 justify-center">
                     <button onclick="switchTab('home')" class="flex-1 md:w-full text-center md:text-right py-2 px-3 md:px-4 rounded hover:bg-slate-700 transition text-sm md:text-base font-medium">🏠 الرئيسية</button>
                     <button onclick="switchTab('new-order')" class="flex-1 md:w-full text-center md:text-right py-2 px-3 md:px-4 rounded hover:bg-slate-700 transition text-sm md:text-base font-medium">➕ طلب</button>
@@ -71,7 +74,6 @@
             </div>
         </div>
 
-        <!-- محتوى الصفحة -->
         <div class="flex-1 flex flex-col overflow-y-auto">
             <header class="bg-white shadow p-4 flex justify-between items-center">
                 <div class="flex items-center gap-3">
@@ -81,7 +83,6 @@
             </header>
 
             <main class="p-4 md:p-6">
-                <!-- قسم الرئيسية (الإحصائيات) -->
                 <div id="tab-home" class="tab-content space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div class="bg-white p-4 rounded-lg shadow border-r-4 border-blue-500">
@@ -99,7 +100,6 @@
                     </div>
                 </div>
 
-                <!-- قسم إنشاء طلب -->
                 <div id="tab-new-order" class="tab-content hidden bg-white p-6 rounded-lg shadow max-w-2xl mx-auto">
                     <h3 class="text-lg font-bold mb-4 text-slate-800">إنشاء طلب جديد وإسناده لعامل</h3>
                     <form id="order-form" class="space-y-4">
@@ -124,8 +124,8 @@
                             </div>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-slate-700">العنوان / الموقع</label>
-                            <input type="text" id="cust-location" required class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="مثال: الرياض، حي الملقا...">
+                            <label class="block text-sm font-medium text-slate-700">العنوان / رابط أو وصف الموقع</label>
+                            <input type="text" id="cust-location" required class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="مثال: الرياض، حي الملقا أو رابط خرائط قوقل...">
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
@@ -145,7 +145,6 @@
                     </form>
                 </div>
 
-                <!-- قسم جميع الطلبات -->
                 <div id="tab-all-orders" class="tab-content hidden bg-white p-4 md:p-6 rounded-lg shadow">
                     <h3 class="text-lg font-bold mb-4 text-slate-800">قائمة جميع الطلبات والحالات اللحظية</h3>
                     <div class="overflow-x-auto">
@@ -157,7 +156,7 @@
                                     <th class="p-3">السيارة</th>
                                     <th class="p-3">العامل المسند</th>
                                     <th class="p-3">الحالة الحالية</th>
-                                    <th class="p-3">التفاصيل والأوقات</th>
+                                    <th class="p-3">الموقع والخريطة</th>
                                     <th class="p-3 text-center">إجراء الحذف</th>
                                 </tr>
                             </thead>
@@ -166,7 +165,6 @@
                     </div>
                 </div>
 
-                <!-- قسم التقارير والطباعة -->
                 <div id="tab-reports" class="tab-content hidden bg-white p-6 rounded-lg shadow space-y-6">
                     <div class="no-print flex flex-col md:flex-row gap-4 items-end bg-slate-50 p-4 rounded-xl border">
                         <div class="flex-1 w-full">
@@ -183,7 +181,6 @@
                         </div>
                     </div>
 
-                    <!-- المنطقة القابلة للطباعة -->
                     <div id="printable-report" class="bg-white p-4 rounded-xl space-y-4">
                         <div class="text-center border-b pb-4">
                             <h3 class="text-xl font-bold text-slate-800">تقرير نظام تغيير الزيت (سجل العمليات)</h3>
@@ -202,15 +199,12 @@
                                         <th class="p-2.5 border">الأوقات التفصيلية</th>
                                     </tr>
                                 </thead>
-                                <tbody id="report-table-body" class="text-xs text-slate-700">
-                                    <!-- تعبئة تلقائية -->
-                                </tbody>
+                                <tbody id="report-table-body" class="text-xs text-slate-700"></tbody>
                             </table>
                         </div>
                     </div>
                 </div>
 
-                <!-- قسم العمال وإدارة كلمات المرور -->
                 <div id="tab-workers" class="tab-content hidden bg-white p-6 rounded-lg shadow max-w-xl mx-auto space-y-6">
                     <div>
                         <h3 class="text-lg font-bold mb-4 text-slate-800 border-b pb-3">إضافة عامل جديد وكلمة المرور</h3>
@@ -239,7 +233,6 @@
                     </div>
                 </div>
 
-                <!-- الإعدادات -->
                 <div id="tab-settings" class="tab-content hidden bg-white p-6 rounded-lg shadow max-w-lg mx-auto">
                     <h3 class="text-lg font-bold mb-4 text-slate-800">إعدادات النظام والحساب</h3>
                     <p class="text-gray-600 text-sm">المشروع مرتبط بخدمات سحابية مباشرة: <span class="font-mono text-xs bg-gray-100 p-1 rounded font-bold">half-27475</span></p>
@@ -248,7 +241,6 @@
         </div>
     </div>
 
-    <!-- كود الجافاسكريبت والتنبيهات الإجبارية التلقائية -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -336,7 +328,6 @@
             }
         }
 
-        // دالة حذف العامل
         window.deleteWorker = function(workerId) {
             if (confirm("هل أنت متأكد من حذف هذا العامل نهائياً؟")) {
                 remove(ref(db, `workers/${workerId}`)).then(() => {
@@ -413,7 +404,13 @@
                 const carName = o.carName || '';
                 const carPlate = o.carPlate || '';
                 const assignedWorker = o.assignedWorkerName || o.assignedWorker || 'غير مسند';
-                const location = o.location || o.custLocation || 'غير متوفر';
+                const locText = o.location || o.custLocation || 'غير متوفر';
+                
+                // تجهيز رابط خريطة قوقل حقيقي للمدير أيضاً
+                let mapUrl = locText;
+                if (!locText.startsWith('http')) {
+                    mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locText)}`;
+                }
 
                 const rowHtml = `
                     <tr class="border-b hover:bg-slate-50 transition">
@@ -426,7 +423,11 @@
                                 ${o.status}
                             </span>
                         </td>
-                        <td class="p-3 text-xs text-slate-500">${location}</td>
+                        <td class="p-3">
+                            <a href="${mapUrl}" target="_blank" class="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-2.5 py-1 rounded-lg text-xs font-bold transition shadow-sm">
+                                🗺️ فتح خريطة قوقل
+                            </a>
+                        </td>
                         <td class="p-3 text-center">
                             <button onclick="deleteOrder('${id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold transition shadow">🗑️ حذف</button>
                         </td>

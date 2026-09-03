@@ -4,13 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة العامل - خدمة تغيير الزيت</title>
+    <!-- إضافة الشعار الأيقونة وتكامل الشاشة الرئيسية PWA -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23065f46'/><text x='50' y='65' font-size='50' font-weight='bold' text-anchor='middle' fill='%2334d399' font-family='Arial'>1/2</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23065f46'/><text x='50' y='65' font-size='50' font-weight='bold' text-anchor='middle' fill='%2334d399' font-family='Arial'>1/2</text></svg>">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="تغيير الزيت">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 font-sans">
 
-    <!-- شاشة تسجيل الدخول للعامل -->
     <div id="login-screen" class="flex items-center justify-center h-screen bg-slate-900 p-4">
         <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md space-y-4 text-center">
+            <div class="flex justify-center mb-2">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-600 flex items-center justify-center font-bold text-white text-xl shadow-md">½</div>
+            </div>
             <h2 id="txt-login-title" class="text-xl font-bold text-slate-800">تسجيل دخول العامل</h2>
             <p id="txt-login-sub" class="text-xs text-slate-500">الرجاء إدخال رقم الجوال وكلمة المرور الخاصة بك</p>
             <form id="worker-login-form" class="space-y-3 text-right">
@@ -27,12 +35,14 @@
         </div>
     </div>
 
-    <!-- لوحة تحكم العامل -->
     <div id="worker-dashboard" class="hidden flex flex-col h-screen">
         <header class="bg-slate-800 text-white p-4 flex flex-col md:flex-row justify-between items-center shadow gap-3">
-            <div>
-                <h1 id="worker-welcome-title" class="text-lg font-bold">مرحباً، جاري التحميل...</h1>
-                <span id="worker-current-status" class="text-xs bg-emerald-500 text-white px-2 py-0.5 rounded-full">الحالة: متاح</span>
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center font-bold text-white shadow">½</div>
+                <div>
+                    <h1 id="worker-welcome-title" class="text-lg font-bold">مرحباً، جاري التحميل...</h1>
+                    <span id="worker-current-status" class="text-xs bg-emerald-500 text-white px-2 py-0.5 rounded-full">الحالة: متاح</span>
+                </div>
             </div>
             <div class="flex items-center gap-3">
                 <select id="lang-selector" onchange="changeLanguage(this.value)" class="bg-slate-700 text-white text-xs p-1.5 rounded-lg border border-slate-600 outline-none">
@@ -44,14 +54,12 @@
             </div>
         </header>
 
-        <!-- أزرار التنقل بين الطلبات الحالية والطلبات السابقة -->
         <div class="bg-white border-b px-4 py-2 flex gap-2 justify-center shadow-sm">
             <button onclick="switchTab('current')" id="tab-btn-current" class="px-4 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white transition">الطلبات الحالية</button>
             <button onclick="switchTab('history')" id="tab-btn-history" class="px-4 py-1.5 rounded-lg text-xs font-bold bg-gray-200 text-slate-700 transition">الطلبات السابقة (المكتملة)</button>
         </div>
 
         <main class="flex-1 p-4 md:p-6 overflow-y-auto space-y-6 max-w-2xl mx-auto w-full">
-            <!-- أزرار تحديث الحالة (داخل / خارج الموقع) -->
             <div id="status-box-section" class="bg-white p-4 rounded-xl shadow space-y-3">
                 <h3 id="txt-status-title" class="text-sm font-bold text-slate-700">تحديث حالتك الحالية للعمليات:</h3>
                 <div class="grid grid-cols-2 gap-3">
@@ -64,7 +72,6 @@
                 </div>
             </div>
 
-            <!-- قسم الطلبات الحالية -->
             <div id="section-current-orders" class="bg-white p-4 rounded-xl shadow space-y-4">
                 <h3 id="txt-orders-title" class="text-base font-bold text-slate-800 border-b pb-2">الطلبات المسندة إليك:</h3>
                 <div id="assigned-orders-container" class="space-y-4">
@@ -72,7 +79,6 @@
                 </div>
             </div>
 
-            <!-- قسم الطلبات السابقة -->
             <div id="section-history-orders" class="bg-white p-4 rounded-xl shadow space-y-4 hidden">
                 <h3 id="txt-history-title" class="text-base font-bold text-slate-800 border-b pb-2">سجل الطلبات السابقة المكتملة:</h3>
                 <div id="history-orders-container" class="space-y-4">
@@ -82,7 +88,6 @@
         </main>
     </div>
 
-    <!-- كود جافاسكريبت وتكامل السحابة -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -124,7 +129,7 @@
                 tabHistory: "الطلبات السابقة (المكتملة)",
                 logout: "خروج",
                 callCust: "📞 الاتصال بالعميل",
-                mapLoc: "🗺️ التوجه إلى الموقع",
+                mapLoc: "🗺️ خريطة قوقل حقيقية",
                 startMove: "🚗 بدء التحرك للعميل",
                 arrive: "📍 وصلت إلى موقع العميل",
                 finish: "✅ تم إنهاء الخدمة",
@@ -146,7 +151,7 @@
                 tabHistory: "Previous Orders",
                 logout: "Logout",
                 callCust: "📞 Call Customer",
-                mapLoc: "🗺️ Open Map Location",
+                mapLoc: "🗺️ Google Maps Location",
                 startMove: "🚗 Start Moving",
                 arrive: "📍 Arrived at Location",
                 finish: "✅ Complete Service",
@@ -168,7 +173,7 @@
                 tabHistory: "পূর্ববর্তী অর্ডার",
                 logout: "লগআউট",
                 callCust: "📞 গ্রাহককে কল করুন",
-                mapLoc: "🗺️ মানচিত্র খুলুন",
+                mapLoc: "🗺️ গুগল ম্যাপ খুলুন",
                 startMove: "🚗 চলা শুরু করুন",
                 arrive: "📍 লোকেশনে পৌঁছেছি",
                 finish: "✅ সেবা সম্পন্ন করুন",
@@ -258,9 +263,7 @@
                         osc.stop(now + delay + 0.15);
                     });
                 }
-            } catch (e) {
-                console.log("Audio error:", e);
-            }
+            } catch (e) {}
         }
 
         if (currentWorkerId && currentWorkerName) {
@@ -303,7 +306,7 @@
         function showDashboard(name) {
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('worker-dashboard').classList.remove('hidden');
-            document.getElementById('worker-welcome-title', ).innerText = `مرحباً بك، الكابتن ${name}`;
+            document.getElementById('worker-welcome-title').innerText = `مرحباً بك، الكابتن ${name}`;
             listenToAssignedOrders(name);
         }
 
@@ -321,9 +324,7 @@
 
         window.deleteWorkerOrder = function(orderId) {
             if (confirm("هل أنت متأكد من حذف هذا الطلب من السجل؟")) {
-                remove(ref(db, `orders/${orderId}`)).then(() => {
-                    // تم الحذف بنجاح
-                }).catch((error) => {
+                remove(ref(db, `orders/${orderId}`)).catch((error) => {
                     alert("حدث خطأ أثناء الحذف: " + error.message);
                 });
             }
@@ -352,9 +353,14 @@
 
                         const phoneNum = order.customerPhone || order.custPhone || '';
                         const locText = order.location || order.custLocation || '';
-                        const locationText = encodeURIComponent(locText);
+                        
+                        // تعديل مهم: فتح خريطة قوقل حقيقية ودقيقة بناءً على إدخال المدير (سواء كان رابط أو اسم موقع)
+                        let mapLink = locText;
+                        if (!locText.startsWith('http')) {
+                            mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locText)}`;
+                        }
+
                         const callLink = `tel:${phoneNum}`;
-                        const mapLink = `https://www.google.com/maps/search/?api=1&query=${locationText}`;
 
                         let actionButtons = '';
                         if (isFinished) {
