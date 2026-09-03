@@ -106,7 +106,6 @@
         let isFirstLoad = true;
         let deferredPrompt = null;
 
-        // ميزة التثبيت التلقائي والشاشة الرئيسية PWA
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
@@ -125,7 +124,6 @@
             }
         });
 
-        // طلب إذن إشعارات المتصفح لضمان عمل التنبيهات حتى وإن كان التطبيق في الخلفية
         if ("Notification.permission" in window && Notification.permission !== "granted") {
             Notification.requestPermission();
         }
@@ -258,7 +256,6 @@
         window.addEventListener('click', initAutoAudio, { once: true });
         window.addEventListener('touchstart', initAutoAudio, { once: true });
 
-        // تشغيل النغمة وإرسال إشعار شاشة خارجية (حتى لو كان التطبيق بالخلفية)
         function playWorkerSoundAndNotify(orderTitle) {
             try {
                 if (!audioCtx) {
@@ -283,7 +280,6 @@
                 });
             } catch (e) {}
 
-            // إرسال إشعار للنظام الخارجي للشاشة
             if ("Notification" in window && Notification.permission === "granted") {
                 try {
                     new Notification("طلب جديد متاح! 🚗", {
@@ -395,7 +391,7 @@
                                     <button onclick="deleteWorkerOrder('${id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow">${translations[currentLang].deleteBtn}</button>
                                 </div>
                             `;
-                        } else if (order.status === 'تم إرسال الطلب') {
+                        } else if (order.status === 'تم إرسال الطلب' || order.status === 'جارية') {
                             actionButtons = `<button onclick="updateOrderStatus('${id}', 'تحرك العامل')" class="w-full bg-amber-500 hover:bg-amber-600 text-white py-2 rounded-xl text-xs font-bold transition shadow mb-2">${translations[currentLang].startMove}</button>`;
                         } else if (order.status === 'تحرك العامل') {
                             actionButtons = `<button onclick="updateOrderStatus('${id}', 'وصل العامل')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl text-xs font-bold transition shadow mb-2">${translations[currentLang].arrive}</button>`;

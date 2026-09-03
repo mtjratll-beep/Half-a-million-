@@ -26,20 +26,15 @@
         }
     </style>
     <script>
-        // التحقق الصارم من كلمة المرور لتصبح "Half a million" فقط مع منع فتح الصفحة إطلاقاً عند الخطأ
         (function() {
             let entered = sessionStorage.getItem("admin_logged");
-            
             if (entered !== "true") {
                 let password = prompt("الرجاء إدخال كلمة سر صفحة المدير:");
                 if (password === "Half a million") {
                     sessionStorage.setItem("admin_logged", "true");
                 } else {
-                    alert("كلمة السر غير صحيحة!");
-                    // إعادة توجيه الصفحة فوراً وإغلاقها أو منع عرض أي محتوى نهائياً
-                    window.stop();
-                    document.documentElement.innerHTML = "<div style='text-align:center; margin-top:20vh; font-family:tahoma; color:red;'><h2>عذراً، كلمة المرور غير صحيحة. تم إغلاق الصفحة.</h2></div>";
-                    throw new Error("Unauthorized");
+                    document.documentElement.innerHTML = "<body style='background:#0f172a; color:#ef4444; font-family:tahoma; display:flex; justify-content:center; align-items:center; height:100vh; margin:0;'><div style='text-align:center; padding:30px; background:#1e293b; border-radius:12px;'><h2 style='font-size:22px; margin-bottom:10px;'>عذراً، كلمة المرور غير صحيحة</h2><p style='color:#94a3b8; font-size:14px;'>تم رفض الدخول إلى صفحة المدير.</p></div></body>";
+                    throw new Error("Access Denied");
                 }
             }
         })();
@@ -52,19 +47,17 @@
 </head>
 <body class="bg-slate-900 font-sans">
 
-    <div id="login-screen" class="hidden"></div>
-
     <div class="flex flex-col md:flex-row h-screen overflow-hidden bg-gray-100">
         <div class="w-full md:w-64 bg-slate-800 text-white flex flex-col justify-between p-4 shrink-0">
             <div>
                 <h1 class="text-xl font-bold mb-4 md:mb-6 text-center text-amber-400">نظام تغيير الزيت</h1>
                 <nav class="flex md:flex-col flex-wrap gap-1 md:space-y-2 justify-center">
-                    <button onclick="switchTab('home')" class="flex-1 md:w-full text-center md:text-right py-2 px-3 md:px-4 rounded hover:bg-slate-700 transition text-sm md:text-base font-medium">🏠 الرئيسية</button>
-                    <button onclick="switchTab('new-order')" class="flex-1 md:w-full text-center md:text-right py-2 px-3 md:px-4 rounded hover:bg-slate-700 transition text-sm md:text-base font-medium">➕ طلب</button>
-                    <button onclick="switchTab('all-orders')" class="flex-1 md:w-full text-center md:text-right py-2 px-3 md:px-4 rounded hover:bg-slate-700 transition text-sm md:text-base font-medium">📋 الطلبات</button>
-                    <button onclick="switchTab('workers')" class="flex-1 md:w-full text-center md:text-right py-2 px-3 md:px-4 rounded hover:bg-slate-700 transition text-sm md:text-base font-medium">👷 العمال وكلمات المرور</button>
-                    <button onclick="switchTab('reports')" class="flex-1 md:w-full text-center md:text-right py-2 px-3 md:px-4 rounded hover:bg-slate-700 transition text-sm md:text-base font-medium">📊 التقارير والطباعة</button>
-                    <button onclick="switchTab('settings')" class="flex-1 md:w-full text-center md:text-right py-2 px-3 md:px-4 rounded hover:bg-slate-700 transition text-sm md:text-base font-medium">⚙️ الإعدادات</button>
+                    <button onclick="switchTab('home')" class="flex-1 md:w-full text-center md:text-right py-2 px-3 md:px-4 rounded hover:bg-slate-700 transition text-sm font-medium">🏠 الرئيسية</button>
+                    <button onclick="switchTab('new-order')" class="flex-1 md:w-full text-center md:text-right py-2 px-3 md:px-4 rounded hover:bg-slate-700 transition text-sm font-medium">➕ طلب</button>
+                    <button onclick="switchTab('all-orders')" class="flex-1 md:w-full text-center md:text-right py-2 px-3 md:px-4 rounded hover:bg-slate-700 transition text-sm font-medium">📋 الطلبات</button>
+                    <button onclick="switchTab('workers')" class="flex-1 md:w-full text-center md:text-right py-2 px-3 md:px-4 rounded hover:bg-slate-700 transition text-sm font-medium">👷 العمال</button>
+                    <button onclick="switchTab('reports')" class="flex-1 md:w-full text-center md:text-right py-2 px-3 md:px-4 rounded hover:bg-slate-700 transition text-sm font-medium">📊 التقارير</button>
+                    <button onclick="switchTab('settings')" class="flex-1 md:w-full text-center md:text-right py-2 px-3 md:px-4 rounded hover:bg-slate-700 transition text-sm font-medium">⚙️ الإعدادات</button>
                 </nav>
             </div>
             <div class="hidden md:block mt-4">
@@ -74,9 +67,7 @@
 
         <div class="flex-1 flex flex-col overflow-y-auto">
             <header class="bg-white shadow p-4 flex justify-between items-center">
-                <div class="flex items-center gap-3">
-                    <h2 id="page-title" class="text-lg md:text-xl font-semibold text-gray-800">الرئيسية</h2>
-                </div>
+                <h2 id="page-title" class="text-lg md:text-xl font-semibold text-gray-800">الرئيسية</h2>
                 <span class="text-xs md:text-sm bg-blue-100 text-blue-800 font-bold px-3 py-1 rounded-full">مدير النظام</span>
             </header>
 
@@ -99,7 +90,7 @@
                 </div>
 
                 <div id="tab-new-order" class="tab-content hidden bg-white p-6 rounded-lg shadow max-w-2xl mx-auto">
-                    <h3 class="text-lg font-bold mb-4 text-slate-800">إنشاء طلب جديد وإسناده لعامل</h3>
+                    <h3 class="text-lg font-bold mb-4 text-slate-800">إنشاء طلب جديد وإسناده لعامل (سريع وبحالة جارية فوراً)</h3>
                     <form id="order-form" class="space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
@@ -122,8 +113,8 @@
                             </div>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-slate-700">العنوان / الموقع</label>
-                            <input type="text" id="cust-location" required class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="مثال: الرياض، حي الملقا...">
+                            <label class="block text-sm font-medium text-slate-700">رابط الموقع (صصق رابط خرائط جوجل هنا)</label>
+                            <input type="url" id="cust-location" required class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="https://maps.app.goo.gl/...">
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
@@ -139,7 +130,7 @@
                                 <select id="assigned-worker" class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500" required></select>
                             </div>
                         </div>
-                        <button type="submit" class="w-full bg-blue-600 text-white p-3 rounded-xl font-bold hover:bg-blue-700 transition shadow">إرسال الطلب للسحابة</button>
+                        <button type="submit" class="w-full bg-blue-600 text-white p-3 rounded-xl font-bold hover:bg-blue-700 transition shadow">إرسال الطلب للسحابة فوراً</button>
                     </form>
                 </div>
 
@@ -154,7 +145,7 @@
                                     <th class="p-3">السيارة</th>
                                     <th class="p-3">العامل المسند</th>
                                     <th class="p-3">الحالة الحالية</th>
-                                    <th class="p-3">التفاصيل والأوقات</th>
+                                    <th class="p-3">التفاصيل والموقع</th>
                                     <th class="p-3 text-center">إجراء الحذف</th>
                                 </tr>
                             </thead>
@@ -166,35 +157,29 @@
                 <div id="tab-reports" class="tab-content hidden bg-white p-6 rounded-lg shadow space-y-6">
                     <div class="no-print flex flex-col md:flex-row gap-4 items-end bg-slate-50 p-4 rounded-xl border">
                         <div class="flex-1 w-full">
-                            <label class="block text-sm font-medium text-slate-700 mb-1">تحديد حسب اليوم:</label>
-                            <input type="date" id="report-date-filter" class="w-full p-2 border rounded-lg bg-white text-sm">
-                        </div>
-                        <div class="flex-1 w-full">
-                            <label class="block text-sm font-medium text-slate-700 mb-1">تحديد حسب الشهر:</label>
-                            <input type="month" id="report-month-filter" class="w-full p-2 border rounded-lg bg-white text-sm">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">تحديد حسب التاريخ:</label>
+                            <input type="date" id="report-date-filter" class="w-full p-2.5 border rounded-xl bg-white text-sm outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div class="flex gap-2 w-full md:w-auto">
-                            <button onclick="filterReport()" class="flex-1 md:flex-none bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition">عرض التقرير</button>
-                            <button onclick="window.print()" class="flex-1 md:flex-none bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-700 transition flex items-center justify-center gap-1">🖨️ طباعة التقرير</button>
+                            <button onclick="filterReport()" class="flex-1 md:flex-none bg-blue-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-blue-700 transition shadow">عرض التقرير</button>
+                            <button onclick="window.print()" class="flex-1 md:flex-none bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-emerald-700 transition shadow">🖨️ طباعة</button>
                         </div>
                     </div>
-
                     <div id="printable-report" class="bg-white p-4 rounded-xl space-y-4">
                         <div class="text-center border-b pb-4">
-                            <h3 class="text-xl font-bold text-slate-800">تقرير نظام تغيير الزيت (سجل العمليات)</h3>
-                            <p id="report-period-label" class="text-sm text-slate-500 mt-1">جميع الطلبات المسجلة في النظام</p>
+                            <h3 class="text-xl font-bold text-slate-800">تقرير نظام تغيير الزيت</h3>
+                            <p id="report-date-label" class="text-xs text-slate-500 mt-1">جميع الطلبات</p>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-right border-collapse min-w-[600px] border border-slate-200">
                                 <thead>
-                                    <tr class="bg-slate-100 border-b text-xs text-slate-800 font-bold">
+                                    <tr class="bg-slate-100 text-xs font-bold text-slate-700">
                                         <th class="p-2.5 border">رقم الطلب</th>
-                                        <th class="p-2.5 border">التاريخ واليوم</th>
+                                        <th class="p-2.5 border">التاريخ</th>
                                         <th class="p-2.5 border">العميل</th>
                                         <th class="p-2.5 border">السيارة</th>
                                         <th class="p-2.5 border">العامل</th>
                                         <th class="p-2.5 border">الحالة</th>
-                                        <th class="p-2.5 border">الأوقات التفصيلية</th>
                                     </tr>
                                 </thead>
                                 <tbody id="report-table-body" class="text-xs text-slate-700"></tbody>
@@ -204,42 +189,27 @@
                 </div>
 
                 <div id="tab-workers" class="tab-content hidden bg-white p-6 rounded-lg shadow max-w-xl mx-auto space-y-6">
-                    <div>
-                        <h3 class="text-lg font-bold mb-4 text-slate-800 border-b pb-3">إضافة عامل جديد وكلمة المرور</h3>
-                        <form id="worker-form" class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700">اسم العامل</label>
-                                <input type="text" id="worker-name" required placeholder="أدخل اسم العامل..." class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700">رقم الجوال (معرف الدخول)</label>
-                                <input type="text" id="worker-phone" required placeholder="05xxxxxxxx" class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700">كلمة المرور</label>
-                                <input type="password" id="worker-pass" required placeholder="كلمة المرور الخاصة بالعامل..." class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                            <button type="submit" class="w-full bg-emerald-600 text-white py-2.5 rounded-xl text-sm font-bold hover:bg-emerald-700 transition shadow">حفظ وإضافة العامل للسحابة</button>
-                        </form>
-                    </div>
-
-                    <div class="border-t pt-4">
-                        <h4 class="font-bold text-slate-700 mb-3 text-sm">قائمة العمال المسجلين حالياً:</h4>
-                        <ul id="workers-list" class="divide-y divide-gray-100 bg-slate-50 rounded-xl p-3">
-                            <li class="text-slate-400 text-sm text-center py-2">جاري تحميل العمال...</li>
-                        </ul>
-                    </div>
+                    <form id="worker-form" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">اسم العامل</label>
+                            <input type="text" id="worker-name" required class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">رقم الجوال</label>
+                            <input type="text" id="worker-phone" required class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">كلمة المرور</label>
+                            <input type="password" id="worker-pass" required class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm">
+                        </div>
+                        <button type="submit" class="w-full bg-emerald-600 text-white py-2.5 rounded-xl text-sm font-bold">حفظ العامل</button>
+                    </form>
+                    <ul id="workers-list" class="divide-y bg-slate-50 rounded-xl p-3"></ul>
                 </div>
 
                 <div id="tab-settings" class="tab-content hidden bg-white p-6 rounded-lg shadow max-w-lg mx-auto space-y-4">
-                    <h3 class="text-lg font-bold text-slate-800">إعدادات النظام والحساب</h3>
-                    <p class="text-gray-600 text-sm">المشروع مرتبط بخدمات سحابية مباشرة: <span class="font-mono text-xs bg-gray-100 p-1 rounded font-bold">half-27475</span></p>
-                    <div class="pt-4 border-t">
-                        <h4 class="font-bold text-slate-700 mb-2 text-sm">تثبيت التطبيق على الشاشة الرئيسية:</h4>
-                        <button id="install-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-xl font-bold text-sm transition shadow flex items-center justify-center gap-2">
-                            📱 تثبيت تطبيق المدير على الشاشة الرئيسية
-                        </button>
-                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">إعدادات النظام</h3>
+                    <button id="install-btn" class="w-full bg-indigo-600 text-white p-3 rounded-xl font-bold text-sm">📱 تثبيت التطبيق</button>
                 </div>
             </main>
         </div>
@@ -264,264 +234,150 @@
         const db = getDatabase(app);
 
         let allOrdersCache = {};
-        let isInitialLoad = true;
-        let audioCtx = null;
-        let deferredPrompt = null;
 
-        // ميزة التثبيت التلقائي PWA
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            const installBtn = document.getElementById('install-btn');
-            if(installBtn) {
-                installBtn.style.display = 'flex';
-                installBtn.addEventListener('click', () => {
-                    deferredPrompt.prompt();
-                    deferredPrompt.userChoice.then((choiceResult) => {
-                        if (choiceResult.outcome === 'accepted') {
-                            console.log('User accepted the install prompt');
-                        }
-                        deferredPrompt = null;
-                    });
-                });
-            }
-        });
-
-        function initAutoAudio() {
-            try {
-                if (!audioCtx) {
-                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                }
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
-            } catch (e) {}
-        }
-        window.addEventListener('pointerdown', initAutoAudio, { once: true });
-        window.addEventListener('keydown', initAutoAudio, { once: true });
-
-        function playSound(type) {
-            try {
-                if (!audioCtx) {
-                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                }
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
-
-                const now = audioCtx.currentTime;
-                if (type === 'new-order') {
-                    [0, 0.2, 0.4].forEach((delay, index) => {
-                        const osc = audioCtx.createOscillator();
-                        const gain = audioCtx.createGain();
-                        osc.type = 'sine';
-                        osc.frequency.setValueAtTime(880 + (index * 220), now + delay);
-                        gain.gain.setValueAtTime(0.8, now + delay);
-                        gain.gain.exponentialRampToValueAtTime(0.01, now + delay + 0.15);
-                        osc.connect(gain);
-                        gain.connect(audioCtx.destination);
-                        osc.start(now + delay);
-                        osc.stop(now + delay + 0.15);
-                    });
-                }
-            } catch(e) {}
-        }
-
-        // جلب الطلبات وعرضها
-        const ordersRef = ref(db, 'orders');
-        onValue(ordersRef, (snapshot) => {
-            const data = snapshot.val();
-            allOrdersCache = data || {};
-            let total = 0, active = 0, completed = 0;
-            const ordersTbody = document.getElementById('orders-table-body');
-            ordersTbody.innerHTML = '';
-
-            if (data) {
-                const entries = Object.entries(data).reverse();
-                if (!isInitialLoad && entries.length > Object.keys(allOrdersCache).length) {
-                    playSound('new-order');
-                }
-                entries.forEach(([id, order]) => {
-                    total++;
-                    if (order.status === 'مكتملة') {
-                        completed++;
-                    } else {
-                        active++;
-                    }
-
-                    const tr = document.createElement('tr');
-                    tr.className = "border-b hover:bg-gray-50 transition";
-                    tr.innerHTML = `
-                        <td class="p-3 font-mono text-xs text-gray-500">${id.slice(-5)}</td>
-                        <td class="p-3 font-bold text-slate-800">${order.customerName} <br><span class="text-xs text-gray-500 font-normal">${order.customerPhone}</span></td>
-                        <td class="p-3">${order.carName} <br><span class="text-xs text-gray-500 font-mono">${order.carPlate}</span></td>
-                        <td class="p-3 font-medium text-blue-600">${order.assignedWorker || 'غير مسند'}</td>
-                        <td class="p-3"><span class="px-2 py-1 rounded text-xs font-bold ${order.status === 'مكتملة' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}">${order.status || 'جارية'}</span></td>
-                        <td class="p-3 text-xs text-gray-500">
-                            <div>إنشاء: ${order.createdAt || '-'}</div>
-                            ${order.acceptedAt ? `<div>قبول: ${order.acceptedAt}</div>` : ''}
-                            ${order.completedAt ? `<div>إتمام: ${order.completedAt}</div>` : ''}
-                        </td>
-                        <td class="p-3 text-center">
-                            <button onclick="deleteOrder('${id}')" class="bg-red-100 text-red-600 hover:bg-red-600 hover:text-white px-2.5 py-1 rounded text-xs font-bold transition">حذف</button>
-                        </td>
-                    `;
-                    ordersTbody.appendChild(tr);
-                });
-            } else {
-                ordersTbody.innerHTML = `<tr><td colspan="7" class="text-center p-6 text-gray-400">لا توجد طلبات سحابية حالياً</td></tr>`;
-            }
-
-            document.getElementById('stat-total').innerText = total;
-            document.getElementById('stat-active').innerText = active;
-            document.getElementById('stat-completed').innerText = completed;
-            isInitialLoad = false;
-        });
-
-        // حذف طلب
-        window.deleteOrder = function(orderId) {
-            if(confirm("هل أنت متأكد من حذف هذا الطلب نهائياً من السحابة؟")) {
-                remove(ref(db, 'orders/' + orderId));
+        window.switchTab = function(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            document.getElementById('page-title').innerText = {
+                'home': 'الرئيسية', 'new-order': 'إنشاء طلب جديد', 'all-orders': 'قائمة جميع الطلبات',
+                'workers': 'إدارة العمال', 'reports': 'التقارير', 'settings': 'الإعدادات'
+            }[tabId];
+            if(tabId === 'reports') {
+                filterReport();
             }
         };
 
-        // إدارة العمال
-        const workersRef = ref(db, 'workers');
-        onValue(workersRef, (snapshot) => {
-            const data = snapshot.val();
-            const workerSelect = document.getElementById('assigned-worker');
-            const workersList = document.getElementById('workers-list');
-            workerSelect.innerHTML = '';
-            workersList.innerHTML = '';
+        function loadWorkersDropdown() {
+            onValue(ref(db, 'workers'), (snapshot) => {
+                const select = document.getElementById('assigned-worker');
+                const workersListUl = document.getElementById('workers-list');
+                select.innerHTML = '<option value="">اختر العامل...</option>';
+                workersListUl.innerHTML = '';
 
-            if (data) {
-                Object.entries(data).forEach(([id, worker]) => {
-                    // تعبئة القائمة المنسدلة للطلب الجديد
-                    const opt = document.createElement('option');
-                    opt.value = worker.name;
-                    opt.textContent = `${worker.name} (${worker.phone})`;
-                    workerSelect.appendChild(opt);
+                if (snapshot.exists()) {
+                    snapshot.forEach((childSnapshot) => {
+                        const worker = childSnapshot.val();
+                        const key = childSnapshot.key;
+                        select.innerHTML += `<option value="${worker.name}">${worker.name} (${worker.phone})</option>`;
+                        workersListUl.innerHTML += `<li class="py-2 flex justify-between items-center text-sm"><span><b>${worker.name}</b> - ${worker.phone}</span><button onclick="deleteWorker('${key}')" class="text-red-600 text-xs font-bold bg-red-50 px-2 py-1 rounded">حذف</button></li>`;
+                    });
+                }
+            });
+        }
+        loadWorkersDropdown();
 
-                    // تعبئة قائمة العمال في تبويب العمال
-                    const li = document.createElement('li');
-                    li.className = "flex justify-between items-center py-2 px-2 text-sm";
-                    li.innerHTML = `
-                        <div>
-                            <span class="font-bold text-slate-800">${worker.name}</span> 
-                            <span class="text-xs text-gray-500 font-mono block">جوال: ${worker.phone} | كلمة المرور: ${worker.pass}</span>
-                        </div>
-                        <button onclick="deleteWorker('${id}')" class="text-red-500 hover:text-red-700 text-xs font-bold">حذف</button>
-                    `;
-                    workersList.appendChild(li);
-                });
-            } else {
-                workerSelect.innerHTML = `<option value="">لا يوجد عمال متاحون</option>`;
-                workersList.innerHTML = `<li class="text-slate-400 text-sm text-center py-2">لا يوجد عمال مسجلين</li>`;
-            }
-        });
-
-        // حذف عامل
-        window.deleteWorker = function(workerId) {
-            if(confirm("هل تريد حذف هذا العامل؟")) {
-                remove(ref(db, 'workers/' + workerId));
-            }
-        };
-
-        // إضافة عامل جديد
         document.getElementById('worker-form').addEventListener('submit', (e) => {
             e.preventDefault();
-            const name = document.getElementById('worker-name').value;
-            const phone = document.getElementById('worker-phone').value;
-            const pass = document.getElementById('worker-pass').value;
-
-            push(ref(db, 'workers'), { name, phone, pass }).then(() => {
-                alert("تم إضافة العامل بنجاح!");
-                document.getElementById('worker-form').reset();
-            });
+            push(ref(db, 'workers'), {
+                name: document.getElementById('worker-name').value.trim(),
+                phone: document.getElementById('worker-phone').value.trim(),
+                pass: document.getElementById('worker-pass').value.trim()
+            }).then(() => { alert('تم إضافة العامل'); document.getElementById('worker-form').reset(); });
         });
 
-        // إنشاء طلب جديد من لوحة المدير
+        window.deleteWorker = (key) => { if(confirm('حذف العامل؟')) remove(ref(db, 'workers/' + key)); };
+
         document.getElementById('order-form').addEventListener('submit', (e) => {
             e.preventDefault();
-            const now = new Date();
-            const dateStr = now.toLocaleDateString('ar-SA') + ' ' + now.toLocaleTimeString('ar-SA', {hour: '2-digit', minute:'2-digit'});
-
-            const newOrderData = {
-                customerName: document.getElementById('cust-name').value,
-                customerPhone: document.getElementById('cust-phone').value,
-                carName: document.getElementById('car-name').value,
-                carPlate: document.getElementById('car-plate').value,
-                location: document.getElementById('cust-location').value,
+            const orderData = {
+                customerName: document.getElementById('cust-name').value.trim(),
+                customerPhone: document.getElementById('cust-phone').value.trim(),
+                carName: document.getElementById('car-name').value.trim(),
+                carPlate: document.getElementById('car-plate').value.trim(),
+                location: document.getElementById('cust-location').value.trim(),
                 serviceType: document.getElementById('service-type').value,
                 assignedWorker: document.getElementById('assigned-worker').value,
                 status: 'جارية',
-                createdAt: dateStr,
-                timestamp: Date.now()
+                createdAt: new Date().toLocaleString('ar-SA')
             };
 
-            push(ref(db, 'orders'), newOrderData).then(() => {
-                alert("تم إرسال الطلب بنجاح إلى السحابة وإسناده للعامل!");
+            push(ref(db, 'orders'), orderData).then(() => {
+                alert('تم إرسال الطلب وإسناده بنجاح');
                 document.getElementById('order-form').reset();
                 switchTab('all-orders');
             });
         });
 
-        // نظام التنقل بين التبويبات
-        window.switchTab = function(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.getElementById('tab-' + tabId).classList.remove('hidden');
-            
-            const titles = {
-                'home': 'الرئيسية',
-                'new-order': 'إنشاء طلب جديد',
-                'all-orders': 'قائمة الطلبات',
-                'workers': 'العمال وكلمات المرور',
-                'reports': 'التقارير والطباعة',
-                'settings': 'الإعدادات'
-            };
-            document.getElementById('page-title').innerText = titles[tabId] || 'لوحة التحكم';
-        };
-
-        // التقارير
-        window.filterReport = function() {
-            const dateFilter = document.getElementById('report-date-filter').value;
-            const monthFilter = document.getElementById('report-month-filter').value;
-            const tbody = document.getElementById('report-table-body');
+        onValue(ref(db, 'orders'), (snapshot) => {
+            const tbody = document.getElementById('orders-table-body');
             tbody.innerHTML = '';
+            allOrdersCache = {};
+            let total = 0, active = 0, completed = 0;
 
-            let filtered = Object.values(allOrdersCache);
+            if (snapshot.exists()) {
+                snapshot.forEach((childSnapshot) => {
+                    const id = childSnapshot.key;
+                    const order = childSnapshot.val();
+                    allOrdersCache[id] = order;
+                    total++;
+                    if (order.status === 'مكتملة' || order.status === 'تم الانتهاء') completed++; else active++;
 
-            if (dateFilter) {
-                document.getElementById('report-period-label').innerText = `تقرير يوم: ${dateFilter}`;
-            } else if (monthFilter) {
-                document.getElementById('report-period-label').innerText = `تقرير شهر: ${monthFilter}`;
+                    // التحقق مما إذا كان الموقع رابطاً مباشراً لفتح الموقع بضغطة زر عند العامل
+                    let locationHtml = order.location;
+                    if (order.location && (order.location.startsWith('http://') || order.location.startsWith('https://'))) {
+                        locationHtml = `<a href="${order.location}" target="_blank" class="inline-block bg-blue-600 text-white px-2.5 py-1 rounded-lg text-xs font-bold hover:bg-blue-700 transition shadow mt-1">📍 فتح الموقع</a>`;
+                    }
+
+                    tbody.innerHTML += `
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="p-3 font-mono text-xs">${id.substring(0, 6)}#</td>
+                            <td class="p-3">${order.customerName}<br><span class="text-xs text-gray-500">${order.customerPhone}</span></td>
+                            <td class="p-3">${order.carName}<br><span class="text-xs text-gray-500">${order.carPlate}</span></td>
+                            <td class="p-3 font-bold text-blue-600">${order.assignedWorker || 'غير مسند'}</td>
+                            <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-bold ${order.status === 'مكتملة' || order.status === 'تم الانتهاء' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}">${order.status}</span></td>
+                            <td class="p-3 text-xs text-gray-600">${order.serviceType}<br>${locationHtml}<br><span class="text-[10px] text-slate-400">${order.createdAt}</span></td>
+                            <td class="p-3 text-center"><button onclick="deleteOrder('${id}')" class="bg-red-100 text-red-700 px-2.5 py-1 rounded text-xs font-bold">حذف</button></td>
+                        </tr>`;
+                });
             } else {
-                document.getElementById('report-period-label').innerText = `جميع الطلبات المسجلة في النظام`;
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-gray-400">لا توجد طلبات مسجلة</td></tr>';
             }
 
-            if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center p-4 text-gray-400">لا توجد بيانات مطابقة للتقرير</td></tr>`;
-                return;
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-active').innerText = active;
+            document.getElementById('stat-completed').innerText = completed;
+            filterReport();
+        });
+
+        window.deleteOrder = (id) => { if(confirm('حذف الطلب؟')) remove(ref(db, 'orders/' + id)); };
+
+        window.filterReport = function() {
+            const selectedDate = document.getElementById('report-date-filter').value;
+            const tbody = document.getElementById('report-table-body');
+            const dateLabel = document.getElementById('report-date-label');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            
+            let hasData = false;
+            if (selectedDate) {
+                dateLabel.innerText = `التاريخ المحدد: ${selectedDate}`;
+            } else {
+                dateLabel.innerText = "جميع الطلبات المسجلة";
             }
 
-            filtered.forEach((order, index) => {
-                const tr = document.createElement('tr');
-                tr.className = "border-b";
-                tr.innerHTML = `
-                    <td class="p-2.5 border font-mono">${index + 1}</td>
-                    <td class="p-2.5 border">${order.createdAt || '-'}</td>
-                    <td class="p-2.5 border font-bold">${order.customerName} (${order.customerPhone})</td>
-                    <td class="p-2.5 border">${order.carName} - ${order.carPlate}</td>
-                    <td class="p-2.5 border">${order.assignedWorker || '-'}</td>
-                    <td class="p-2.5 border font-bold ${order.status === 'مكتملة' ? 'text-green-600' : 'text-amber-600'}">${order.status || 'جارية'}</td>
-                    <td class="p-2.5 border text-gray-500 text-[11px]">
-                        إنشاء: ${order.createdAt || '-'}<br>
-                        ${order.acceptedAt ? `قبول: ${order.acceptedAt}<br>` : ''}
-                        ${order.completedAt ? `إتمام: ${order.completedAt}` : ''}
-                    </td>
-                `;
-                tbody.appendChild(tr);
+            Object.entries(allOrdersCache).forEach(([id, order]) => {
+                let match = true;
+                if (selectedDate && order.createdAt) {
+                    match = order.createdAt.includes(selectedDate);
+                }
+
+                if (match) {
+                    hasData = true;
+                    tbody.innerHTML += `
+                        <tr class="border-b">
+                            <td class="p-2.5 border font-mono text-[11px]">${id.substring(0, 6)}#</td>
+                            <td class="p-2.5 border">${order.createdAt || '-'}</td>
+                            <td class="p-2.5 border">${order.customerName}<br><span class="text-[10px] text-gray-500">${order.customerPhone}</span></td>
+                            <td class="p-2.5 border">${order.carName} (${order.carPlate})</td>
+                            <td class="p-2.5 border font-bold text-blue-600">${order.assignedWorker || 'غير مسند'}</td>
+                            <td class="p-2.5 border"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${order.status === 'مكتملة' || order.status === 'تم الانتهاء' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}">${order.status}</span></td>
+                        </tr>`;
+                }
             });
+
+            if (!hasData) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center p-4 text-gray-400">لا توجد بيانات مطابقة لهذا التاريخ</td></tr>';
+            }
         };
     </script>
 </body>
