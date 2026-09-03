@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة المدير - خدمة تغيير الزيت</title>
-    <!-- إضافة الشعار الأيقونة للموقع -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230f172a'/><text x='50' y='65' font-size='50' font-weight='bold' text-anchor='middle' fill='%2338bdf8' font-family='Arial'>1/2</text></svg>">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230f172a'/><text x='50' y='65' font-size='50' font-weight='bold' text-anchor='middle' fill='%2338bdf8' font-family='Arial'>1/2</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="manifest" href="manifest.json">
     <style>
         @media print {
             body * {
@@ -28,16 +26,19 @@
         }
     </style>
     <script>
+        // التحقق الصارم من كلمة المرور لتصبح "Half a million" فقط مع منع فتح الصفحة إطلاقاً عند الخطأ
         (function() {
             let entered = sessionStorage.getItem("admin_logged");
             
             if (entered !== "true") {
                 let password = prompt("الرجاء إدخال كلمة سر صفحة المدير:");
-                if (password === "Half a million1122") {
+                if (password === "Half a million") {
                     sessionStorage.setItem("admin_logged", "true");
                 } else {
                     alert("كلمة السر غير صحيحة!");
-                    document.body.innerHTML = "<div style='text-align:center; margin-top:20vh; font-family:tahoma; color:red;'><h2>عذراً، كلمة المرور غير صحيحة. تم رفض الوصول.</h2></div>";
+                    // إعادة توجيه الصفحة فوراً وإغلاقها أو منع عرض أي محتوى نهائياً
+                    window.stop();
+                    document.documentElement.innerHTML = "<div style='text-align:center; margin-top:20vh; font-family:tahoma; color:red;'><h2>عذراً، كلمة المرور غير صحيحة. تم إغلاق الصفحة.</h2></div>";
                     throw new Error("Unauthorized");
                 }
             }
@@ -56,10 +57,7 @@
     <div class="flex flex-col md:flex-row h-screen overflow-hidden bg-gray-100">
         <div class="w-full md:w-64 bg-slate-800 text-white flex flex-col justify-between p-4 shrink-0">
             <div>
-                <div class="flex items-center justify-center gap-2 mb-4 md:mb-6">
-                    <div class="w-9 h-9 rounded-xl bg-sky-500 flex items-center justify-center font-bold text-white text-lg shadow">½</div>
-                    <h1 class="text-xl font-bold text-amber-400">نظام تغيير الزيت</h1>
-                </div>
+                <h1 class="text-xl font-bold mb-4 md:mb-6 text-center text-amber-400">نظام تغيير الزيت</h1>
                 <nav class="flex md:flex-col flex-wrap gap-1 md:space-y-2 justify-center">
                     <button onclick="switchTab('home')" class="flex-1 md:w-full text-center md:text-right py-2 px-3 md:px-4 rounded hover:bg-slate-700 transition text-sm md:text-base font-medium">🏠 الرئيسية</button>
                     <button onclick="switchTab('new-order')" class="flex-1 md:w-full text-center md:text-right py-2 px-3 md:px-4 rounded hover:bg-slate-700 transition text-sm md:text-base font-medium">➕ طلب</button>
@@ -124,8 +122,8 @@
                             </div>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-slate-700">العنوان / رابط أو وصف الموقع</label>
-                            <input type="text" id="cust-location" required class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="مثال: الرياض، حي الملقا أو رابط خرائط قوقل...">
+                            <label class="block text-sm font-medium text-slate-700">العنوان / الموقع</label>
+                            <input type="text" id="cust-location" required class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="مثال: الرياض، حي الملقا...">
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
@@ -156,7 +154,7 @@
                                     <th class="p-3">السيارة</th>
                                     <th class="p-3">العامل المسند</th>
                                     <th class="p-3">الحالة الحالية</th>
-                                    <th class="p-3">الموقع والخريطة</th>
+                                    <th class="p-3">التفاصيل والأوقات</th>
                                     <th class="p-3 text-center">إجراء الحذف</th>
                                 </tr>
                             </thead>
@@ -233,9 +231,15 @@
                     </div>
                 </div>
 
-                <div id="tab-settings" class="tab-content hidden bg-white p-6 rounded-lg shadow max-w-lg mx-auto">
-                    <h3 class="text-lg font-bold mb-4 text-slate-800">إعدادات النظام والحساب</h3>
+                <div id="tab-settings" class="tab-content hidden bg-white p-6 rounded-lg shadow max-w-lg mx-auto space-y-4">
+                    <h3 class="text-lg font-bold text-slate-800">إعدادات النظام والحساب</h3>
                     <p class="text-gray-600 text-sm">المشروع مرتبط بخدمات سحابية مباشرة: <span class="font-mono text-xs bg-gray-100 p-1 rounded font-bold">half-27475</span></p>
+                    <div class="pt-4 border-t">
+                        <h4 class="font-bold text-slate-700 mb-2 text-sm">تثبيت التطبيق على الشاشة الرئيسية:</h4>
+                        <button id="install-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-xl font-bold text-sm transition shadow flex items-center justify-center gap-2">
+                            📱 تثبيت تطبيق المدير على الشاشة الرئيسية
+                        </button>
+                    </div>
                 </div>
             </main>
         </div>
@@ -262,6 +266,26 @@
         let allOrdersCache = {};
         let isInitialLoad = true;
         let audioCtx = null;
+        let deferredPrompt = null;
+
+        // ميزة التثبيت التلقائي PWA
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const installBtn = document.getElementById('install-btn');
+            if(installBtn) {
+                installBtn.style.display = 'flex';
+                installBtn.addEventListener('click', () => {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then((choiceResult) => {
+                        if (choiceResult.outcome === 'accepted') {
+                            console.log('User accepted the install prompt');
+                        }
+                        deferredPrompt = null;
+                    });
+                });
+            }
+        });
 
         function initAutoAudio() {
             try {
@@ -300,198 +324,205 @@
                         osc.stop(now + delay + 0.15);
                     });
                 }
-            } catch (e) {}
+            } catch(e) {}
         }
 
-        window.switchTab = function(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
-            
-            const titles = {
-                'home': 'الرئيسية والإحصائيات',
-                'new-order': 'إنشاء طلب جديد',
-                'all-orders': 'قائمة الطلبات',
-                'workers': 'إدارة العمال وكلمات المرور',
-                'reports': 'التقارير والطباعة',
-                'settings': 'إعدادات النظام'
-            };
-            document.getElementById('page-title').innerText = titles[tabId] || 'لوحة التحكم';
-        }
+        // جلب الطلبات وعرضها
+        const ordersRef = ref(db, 'orders');
+        onValue(ordersRef, (snapshot) => {
+            const data = snapshot.val();
+            allOrdersCache = data || {};
+            let total = 0, active = 0, completed = 0;
+            const ordersTbody = document.getElementById('orders-table-body');
+            ordersTbody.innerHTML = '';
 
-        window.deleteOrder = function(orderId) {
-            if (confirm("هل أنت متأكد من حذف هذا الطلب نهائياً؟")) {
-                remove(ref(db, `orders/${orderId}`)).then(() => {
-                    alert("تم حذف الطلب بنجاح.");
-                }).catch((error) => {
-                    alert("حدث خطأ أثناء الحذف: " + error.message);
-                });
-            }
-        }
-
-        window.deleteWorker = function(workerId) {
-            if (confirm("هل أنت متأكد من حذف هذا العامل نهائياً؟")) {
-                remove(ref(db, `workers/${workerId}`)).then(() => {
-                    alert("تم حذف العامل بنجاح.");
-                }).catch((error) => {
-                    alert("حدث خطأ أثناء الحذف: " + error.message);
-                });
-            }
-        }
-
-        onValue(ref(db, 'orders'), (snapshot) => {
-            const data = snapshot.val() || {};
-            
-            if (!isInitialLoad) {
-                const oldKeys = Object.keys(allOrdersCache);
-                const newKeys = Object.keys(data);
-                if (newKeys.length > oldKeys.length) {
+            if (data) {
+                const entries = Object.entries(data).reverse();
+                if (!isInitialLoad && entries.length > Object.keys(allOrdersCache).length) {
                     playSound('new-order');
                 }
-            }
-            
-            allOrdersCache = data;
-            isInitialLoad = false;
-            updateUI(data);
-        });
+                entries.forEach(([id, order]) => {
+                    total++;
+                    if (order.status === 'مكتملة') {
+                        completed++;
+                    } else {
+                        active++;
+                    }
 
-        onValue(ref(db, 'workers'), (snapshot) => {
-            const data = snapshot.val() || {};
-            const workerSelect = document.getElementById('assigned-worker');
-            const workersList = document.getElementById('workers-list');
-            
-            workerSelect.innerHTML = '';
-            workersList.innerHTML = '';
-
-            let count = 0;
-            Object.entries(data).forEach(([id, w]) => {
-                count++;
-                workerSelect.innerHTML += `<option value="${w.name}">${w.name} (${w.phone})</option>`;
-                
-                workersList.innerHTML += `
-                    <li class="py-2.5 flex justify-between items-center text-xs text-slate-700">
-                        <div>
-                            <span class="font-bold text-slate-900">${w.name}</span>
-                            <span class="text-slate-500 mr-2">(${w.phone})</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">مرتبط</span>
-                            <button onclick="deleteWorker('${id}')" class="bg-red-500 hover:bg-red-600 text-white px-2.5 py-1 rounded-lg text-xs font-bold transition shadow">🗑️ حذف</button>
-                        </div>
-                    </li>
-                `;
-            });
-
-            if (count === 0) {
-                workerSelect.innerHTML = `<option value="">لا توجد عمالة مسجلة</option>`;
-                workersList.innerHTML = `<li class="text-slate-400 text-sm text-center py-2">لا توجد عمالة مسجلة بعد</li>`;
-            }
-        });
-
-        function updateUI(orders) {
-            let total = 0, active = 0, completed = 0;
-            const tableBody = document.getElementById('orders-table-body');
-            const reportBody = document.getElementById('report-table-body');
-            tableBody.innerHTML = '';
-            reportBody.innerHTML = '';
-
-            Object.entries(orders).forEach(([id, o]) => {
-                total++;
-                const isFinished = o.status === 'تم الانتهاء' || o.status === 'Finished';
-                if (isFinished) completed++;
-                else active++;
-
-                const custName = o.customerName || o.custName || '';
-                const carName = o.carName || '';
-                const carPlate = o.carPlate || '';
-                const assignedWorker = o.assignedWorkerName || o.assignedWorker || 'غير مسند';
-                const locText = o.location || o.custLocation || 'غير متوفر';
-                
-                // تجهيز رابط خريطة قوقل حقيقي للمدير أيضاً
-                let mapUrl = locText;
-                if (!locText.startsWith('http')) {
-                    mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locText)}`;
-                }
-
-                const rowHtml = `
-                    <tr class="border-b hover:bg-slate-50 transition">
-                        <td class="p-3 font-mono font-bold text-blue-600">#${id.slice(-5)}</td>
-                        <td class="p-3 font-medium">${custName}</td>
-                        <td class="p-3">${carName} (${carPlate})</td>
-                        <td class="p-3 font-semibold text-slate-700">${assignedWorker}</td>
-                        <td class="p-3">
-                            <span class="px-2 py-1 rounded-full text-xs font-bold ${isFinished ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}">
-                                ${o.status}
-                            </span>
-                        </td>
-                        <td class="p-3">
-                            <a href="${mapUrl}" target="_blank" class="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-2.5 py-1 rounded-lg text-xs font-bold transition shadow-sm">
-                                🗺️ فتح خريطة قوقل
-                            </a>
+                    const tr = document.createElement('tr');
+                    tr.className = "border-b hover:bg-gray-50 transition";
+                    tr.innerHTML = `
+                        <td class="p-3 font-mono text-xs text-gray-500">${id.slice(-5)}</td>
+                        <td class="p-3 font-bold text-slate-800">${order.customerName} <br><span class="text-xs text-gray-500 font-normal">${order.customerPhone}</span></td>
+                        <td class="p-3">${order.carName} <br><span class="text-xs text-gray-500 font-mono">${order.carPlate}</span></td>
+                        <td class="p-3 font-medium text-blue-600">${order.assignedWorker || 'غير مسند'}</td>
+                        <td class="p-3"><span class="px-2 py-1 rounded text-xs font-bold ${order.status === 'مكتملة' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}">${order.status || 'جارية'}</span></td>
+                        <td class="p-3 text-xs text-gray-500">
+                            <div>إنشاء: ${order.createdAt || '-'}</div>
+                            ${order.acceptedAt ? `<div>قبول: ${order.acceptedAt}</div>` : ''}
+                            ${order.completedAt ? `<div>إتمام: ${order.completedAt}</div>` : ''}
                         </td>
                         <td class="p-3 text-center">
-                            <button onclick="deleteOrder('${id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold transition shadow">🗑️ حذف</button>
+                            <button onclick="deleteOrder('${id}')" class="bg-red-100 text-red-600 hover:bg-red-600 hover:text-white px-2.5 py-1 rounded text-xs font-bold transition">حذف</button>
                         </td>
-                    </tr>
-                `;
-                tableBody.innerHTML += rowHtml;
-
-                reportBody.innerHTML += `
-                    <tr class="border-b">
-                        <td class="p-2.5 border font-mono">#${id.slice(-5)}</td>
-                        <td class="p-2.5 border">${new Date(o.timestamp || Date.now()).toLocaleDateString('ar-SA')}</td>
-                        <td class="p-2.5 border">${custName}</td>
-                        <td class="p-2.5 border">${carName}</td>
-                        <td class="p-2.5 border">${assignedWorker}</td>
-                        <td class="p-2.5 border">${o.status}</td>
-                        <td class="p-2.5 border text-slate-500">تحرك: ${o.timeMoving || '-'} | وصل: ${o.timeArrived || '-'} | انتهى: ${o.timeFinished || '-'}</td>
-                    </tr>
-                `;
-            });
+                    `;
+                    ordersTbody.appendChild(tr);
+                });
+            } else {
+                ordersTbody.innerHTML = `<tr><td colspan="7" class="text-center p-6 text-gray-400">لا توجد طلبات سحابية حالياً</td></tr>`;
+            }
 
             document.getElementById('stat-total').innerText = total;
             document.getElementById('stat-active').innerText = active;
             document.getElementById('stat-completed').innerText = completed;
+            isInitialLoad = false;
+        });
 
-            if (total === 0) {
-                tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400">لا توجد طلبات مسجلة حتى الآن</td></tr>`;
+        // حذف طلب
+        window.deleteOrder = function(orderId) {
+            if(confirm("هل أنت متأكد من حذف هذا الطلب نهائياً من السحابة؟")) {
+                remove(ref(db, 'orders/' + orderId));
             }
-        }
+        };
 
-        document.getElementById('order-form').addEventListener('submit', function(e) {
+        // إدارة العمال
+        const workersRef = ref(db, 'workers');
+        onValue(workersRef, (snapshot) => {
+            const data = snapshot.val();
+            const workerSelect = document.getElementById('assigned-worker');
+            const workersList = document.getElementById('workers-list');
+            workerSelect.innerHTML = '';
+            workersList.innerHTML = '';
+
+            if (data) {
+                Object.entries(data).forEach(([id, worker]) => {
+                    // تعبئة القائمة المنسدلة للطلب الجديد
+                    const opt = document.createElement('option');
+                    opt.value = worker.name;
+                    opt.textContent = `${worker.name} (${worker.phone})`;
+                    workerSelect.appendChild(opt);
+
+                    // تعبئة قائمة العمال في تبويب العمال
+                    const li = document.createElement('li');
+                    li.className = "flex justify-between items-center py-2 px-2 text-sm";
+                    li.innerHTML = `
+                        <div>
+                            <span class="font-bold text-slate-800">${worker.name}</span> 
+                            <span class="text-xs text-gray-500 font-mono block">جوال: ${worker.phone} | كلمة المرور: ${worker.pass}</span>
+                        </div>
+                        <button onclick="deleteWorker('${id}')" class="text-red-500 hover:text-red-700 text-xs font-bold">حذف</button>
+                    `;
+                    workersList.appendChild(li);
+                });
+            } else {
+                workerSelect.innerHTML = `<option value="">لا يوجد عمال متاحون</option>`;
+                workersList.innerHTML = `<li class="text-slate-400 text-sm text-center py-2">لا يوجد عمال مسجلين</li>`;
+            }
+        });
+
+        // حذف عامل
+        window.deleteWorker = function(workerId) {
+            if(confirm("هل تريد حذف هذا العامل؟")) {
+                remove(ref(db, 'workers/' + workerId));
+            }
+        };
+
+        // إضافة عامل جديد
+        document.getElementById('worker-form').addEventListener('submit', (e) => {
             e.preventDefault();
-            const newOrder = {
-                customerName: document.getElementById('cust-name').value.trim(),
-                customerPhone: document.getElementById('cust-phone').value.trim(),
-                carName: document.getElementById('car-name').value.trim(),
-                carPlate: document.getElementById('car-plate').value.trim(),
-                location: document.getElementById('cust-location').value.trim(),
+            const name = document.getElementById('worker-name').value;
+            const phone = document.getElementById('worker-phone').value;
+            const pass = document.getElementById('worker-pass').value;
+
+            push(ref(db, 'workers'), { name, phone, pass }).then(() => {
+                alert("تم إضافة العامل بنجاح!");
+                document.getElementById('worker-form').reset();
+            });
+        });
+
+        // إنشاء طلب جديد من لوحة المدير
+        document.getElementById('order-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('ar-SA') + ' ' + now.toLocaleTimeString('ar-SA', {hour: '2-digit', minute:'2-digit'});
+
+            const newOrderData = {
+                customerName: document.getElementById('cust-name').value,
+                customerPhone: document.getElementById('cust-phone').value,
+                carName: document.getElementById('car-name').value,
+                carPlate: document.getElementById('car-plate').value,
+                location: document.getElementById('cust-location').value,
                 serviceType: document.getElementById('service-type').value,
-                assignedWorkerName: document.getElementById('assigned-worker').value,
-                status: 'تم إرسال الطلب',
+                assignedWorker: document.getElementById('assigned-worker').value,
+                status: 'جارية',
+                createdAt: dateStr,
                 timestamp: Date.now()
             };
 
-            push(ref(db, 'orders'), newOrder).then(() => {
-                alert("تم إرسال الطلب بنجاح وإسناده للعامل!");
+            push(ref(db, 'orders'), newOrderData).then(() => {
+                alert("تم إرسال الطلب بنجاح إلى السحابة وإسناده للعامل!");
                 document.getElementById('order-form').reset();
                 switchTab('all-orders');
             });
         });
 
-        document.getElementById('worker-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const newWorker = {
-                name: document.getElementById('worker-name').value.trim(),
-                phone: document.getElementById('worker-phone').value.trim(),
-                pass: document.getElementById('worker-pass').value.trim(),
-                status: 'متاح'
+        // نظام التنقل بين التبويبات
+        window.switchTab = function(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            
+            const titles = {
+                'home': 'الرئيسية',
+                'new-order': 'إنشاء طلب جديد',
+                'all-orders': 'قائمة الطلبات',
+                'workers': 'العمال وكلمات المرور',
+                'reports': 'التقارير والطباعة',
+                'settings': 'الإعدادات'
             };
+            document.getElementById('page-title').innerText = titles[tabId] || 'لوحة التحكم';
+        };
 
-            push(ref(db, 'workers'), newWorker).then(() => {
-                alert("تم حفظ العامل الجديد وكلمة المرور بنجاح!");
-                document.getElementById('worker-form').reset();
+        // التقارير
+        window.filterReport = function() {
+            const dateFilter = document.getElementById('report-date-filter').value;
+            const monthFilter = document.getElementById('report-month-filter').value;
+            const tbody = document.getElementById('report-table-body');
+            tbody.innerHTML = '';
+
+            let filtered = Object.values(allOrdersCache);
+
+            if (dateFilter) {
+                document.getElementById('report-period-label').innerText = `تقرير يوم: ${dateFilter}`;
+            } else if (monthFilter) {
+                document.getElementById('report-period-label').innerText = `تقرير شهر: ${monthFilter}`;
+            } else {
+                document.getElementById('report-period-label').innerText = `جميع الطلبات المسجلة في النظام`;
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center p-4 text-gray-400">لا توجد بيانات مطابقة للتقرير</td></tr>`;
+                return;
+            }
+
+            filtered.forEach((order, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "border-b";
+                tr.innerHTML = `
+                    <td class="p-2.5 border font-mono">${index + 1}</td>
+                    <td class="p-2.5 border">${order.createdAt || '-'}</td>
+                    <td class="p-2.5 border font-bold">${order.customerName} (${order.customerPhone})</td>
+                    <td class="p-2.5 border">${order.carName} - ${order.carPlate}</td>
+                    <td class="p-2.5 border">${order.assignedWorker || '-'}</td>
+                    <td class="p-2.5 border font-bold ${order.status === 'مكتملة' ? 'text-green-600' : 'text-amber-600'}">${order.status || 'جارية'}</td>
+                    <td class="p-2.5 border text-gray-500 text-[11px]">
+                        إنشاء: ${order.createdAt || '-'}<br>
+                        ${order.acceptedAt ? `قبول: ${order.acceptedAt}<br>` : ''}
+                        ${order.completedAt ? `إتمام: ${order.completedAt}` : ''}
+                    </td>
+                `;
+                tbody.appendChild(tr);
             });
-        });
+        };
     </script>
 </body>
 </html>

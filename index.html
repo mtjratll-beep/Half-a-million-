@@ -4,21 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة العامل - خدمة تغيير الزيت</title>
-    <!-- إضافة الشعار الأيقونة وتكامل الشاشة الرئيسية PWA -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23065f46'/><text x='50' y='65' font-size='50' font-weight='bold' text-anchor='middle' fill='%2334d399' font-family='Arial'>1/2</text></svg>">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23065f46'/><text x='50' y='65' font-size='50' font-weight='bold' text-anchor='middle' fill='%2334d399' font-family='Arial'>1/2</text></svg>">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="تغيير الزيت">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="manifest" href="manifest.json">
 </head>
 <body class="bg-gray-100 font-sans">
 
     <div id="login-screen" class="flex items-center justify-center h-screen bg-slate-900 p-4">
         <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md space-y-4 text-center">
-            <div class="flex justify-center mb-2">
-                <div class="w-12 h-12 rounded-2xl bg-emerald-600 flex items-center justify-center font-bold text-white text-xl shadow-md">½</div>
-            </div>
             <h2 id="txt-login-title" class="text-xl font-bold text-slate-800">تسجيل دخول العامل</h2>
             <p id="txt-login-sub" class="text-xs text-slate-500">الرجاء إدخال رقم الجوال وكلمة المرور الخاصة بك</p>
             <form id="worker-login-form" class="space-y-3 text-right">
@@ -32,17 +24,17 @@
                 </div>
                 <button type="submit" id="txt-login-btn" class="w-full bg-emerald-600 text-white p-3 rounded-xl font-bold hover:bg-emerald-700 transition shadow">دخول لوحة العامل</button>
             </form>
+            <div class="pt-2">
+                <button id="install-btn" class="hidden w-full bg-indigo-600 hover:bg-indigo-700 text-white p-2.5 rounded-xl font-bold text-xs transition shadow">📱 تثبيت تطبيق العامل على الشاشة</button>
+            </div>
         </div>
     </div>
 
     <div id="worker-dashboard" class="hidden flex flex-col h-screen">
         <header class="bg-slate-800 text-white p-4 flex flex-col md:flex-row justify-between items-center shadow gap-3">
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center font-bold text-white shadow">½</div>
-                <div>
-                    <h1 id="worker-welcome-title" class="text-lg font-bold">مرحباً، جاري التحميل...</h1>
-                    <span id="worker-current-status" class="text-xs bg-emerald-500 text-white px-2 py-0.5 rounded-full">الحالة: متاح</span>
-                </div>
+            <div>
+                <h1 id="worker-welcome-title" class="text-lg font-bold">مرحباً، جاري التحميل...</h1>
+                <span id="worker-current-status" class="text-xs bg-emerald-500 text-white px-2 py-0.5 rounded-full">الحالة: متاح</span>
             </div>
             <div class="flex items-center gap-3">
                 <select id="lang-selector" onchange="changeLanguage(this.value)" class="bg-slate-700 text-white text-xs p-1.5 rounded-lg border border-slate-600 outline-none">
@@ -112,6 +104,31 @@
         let audioCtx = null;
         let workerOrdersCache = {};
         let isFirstLoad = true;
+        let deferredPrompt = null;
+
+        // ميزة التثبيت التلقائي والشاشة الرئيسية PWA
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const installBtn = document.getElementById('install-btn');
+            if(installBtn) {
+                installBtn.classList.remove('hidden');
+                installBtn.addEventListener('click', () => {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then((choiceResult) => {
+                        if (choiceResult.outcome === 'accepted') {
+                            console.log('User accepted installed app');
+                        }
+                        deferredPrompt = null;
+                    });
+                });
+            }
+        });
+
+        // طلب إذن إشعارات المتصفح لضمان عمل التنبيهات حتى وإن كان التطبيق في الخلفية
+        if ("Notification.permission" in window && Notification.permission !== "granted") {
+            Notification.requestPermission();
+        }
 
         const translations = {
             ar: {
@@ -129,7 +146,7 @@
                 tabHistory: "الطلبات السابقة (المكتملة)",
                 logout: "خروج",
                 callCust: "📞 الاتصال بالعميل",
-                mapLoc: "🗺️ خريطة قوقل حقيقية",
+                mapLoc: "🗺️ التوجه إلى الموقع",
                 startMove: "🚗 بدء التحرك للعميل",
                 arrive: "📍 وصلت إلى موقع العميل",
                 finish: "✅ تم إنهاء الخدمة",
@@ -151,7 +168,7 @@
                 tabHistory: "Previous Orders",
                 logout: "Logout",
                 callCust: "📞 Call Customer",
-                mapLoc: "🗺️ Google Maps Location",
+                mapLoc: "🗺️ Open Map Location",
                 startMove: "🚗 Start Moving",
                 arrive: "📍 Arrived at Location",
                 finish: "✅ Complete Service",
@@ -173,7 +190,7 @@
                 tabHistory: "পূর্ববর্তী অর্ডার",
                 logout: "লগআউট",
                 callCust: "📞 গ্রাহককে কল করুন",
-                mapLoc: "🗺️ গুগল ম্যাপ খুলুন",
+                mapLoc: "🗺️ মানচিত্র খুলুন",
                 startMove: "🚗 চলা শুরু করুন",
                 arrive: "📍 লোকেশনে পৌঁছেছি",
                 finish: "✅ সেবা সম্পন্ন করুন",
@@ -229,17 +246,20 @@
         }
 
         function initAutoAudio() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            } catch (e) {}
         }
         window.addEventListener('click', initAutoAudio, { once: true });
         window.addEventListener('touchstart', initAutoAudio, { once: true });
 
-        function playWorkerSound(type) {
+        // تشغيل النغمة وإرسال إشعار شاشة خارجية (حتى لو كان التطبيق بالخلفية)
+        function playWorkerSoundAndNotify(orderTitle) {
             try {
                 if (!audioCtx) {
                     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -249,21 +269,29 @@
                 }
 
                 const now = audioCtx.currentTime;
-                if (type === 'new-order') {
-                    [0, 0.2, 0.4].forEach((delay, index) => {
-                        const osc = audioCtx.createOscillator();
-                        const gain = audioCtx.createGain();
-                        osc.type = 'sine';
-                        osc.frequency.setValueAtTime(900 + (index * 150), now + delay);
-                        gain.gain.setValueAtTime(0.9, now + delay);
-                        gain.gain.exponentialRampToValueAtTime(0.01, now + delay + 0.15);
-                        osc.connect(gain);
-                        gain.connect(audioCtx.destination);
-                        osc.start(now + delay);
-                        osc.stop(now + delay + 0.15);
-                    });
-                }
+                [0, 0.2, 0.4].forEach((delay, index) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(900 + (index * 150), now + delay);
+                    gain.gain.setValueAtTime(0.9, now + delay);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + delay + 0.15);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + delay);
+                    osc.stop(now + delay + 0.15);
+                });
             } catch (e) {}
+
+            // إرسال إشعار للنظام الخارجي للشاشة
+            if ("Notification" in window && Notification.permission === "granted") {
+                try {
+                    new Notification("طلب جديد متاح! 🚗", {
+                        body: orderTitle || "يوجد طلب تغيير زيت جديد مسند إليك.",
+                        icon: "https://cdn-icons-png.flaticon.com/512/2961/2961218.png"
+                    });
+                } catch (err) {}
+            }
         }
 
         if (currentWorkerId && currentWorkerName) {
@@ -339,6 +367,7 @@
                 historyContainer.innerHTML = '';
 
                 let hasNewForMe = false;
+                let newOrderDesc = "";
                 let myOrdersCount = 0;
                 let myHistoryCount = 0;
 
@@ -349,18 +378,14 @@
                         
                         if (!isFirstLoad && !workerOrdersCache[id] && !isFinished) {
                             hasNewForMe = true;
+                            newOrderDesc = `طلب جديد للعميل: ${order.customerName || order.custName || 'عميل'} - السيارة: ${order.carName || ''}`;
                         }
 
                         const phoneNum = order.customerPhone || order.custPhone || '';
                         const locText = order.location || order.custLocation || '';
-                        
-                        // تعديل مهم: فتح خريطة قوقل حقيقية ودقيقة بناءً على إدخال المدير (سواء كان رابط أو اسم موقع)
-                        let mapLink = locText;
-                        if (!locText.startsWith('http')) {
-                            mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locText)}`;
-                        }
-
+                        const locationText = encodeURIComponent(locText);
                         const callLink = `tel:${phoneNum}`;
+                        const mapLink = `https://www.google.com/maps/search/?api=1&query=${locationText}`;
 
                         let actionButtons = '';
                         if (isFinished) {
@@ -420,7 +445,7 @@
                 });
 
                 if (hasNewForMe) {
-                    playWorkerSound('new-order');
+                    playWorkerSoundAndNotify(newOrderDesc);
                 }
 
                 workerOrdersCache = data;
