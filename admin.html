@@ -271,7 +271,6 @@
         let isInitialLoad = true;
         let audioCtx = null;
 
-        // تشغيل النغمة بشكل إجباري وتلقائي عند أي تفاعل في الصفحة
         function initAutoAudio() {
             try {
                 if (!audioCtx) {
@@ -312,7 +311,6 @@
             } catch (e) {}
         }
 
-        // التنقل بين الأقسام
         window.switchTab = function(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.getElementById(`tab-${tabId}`).classList.remove('hidden');
@@ -328,7 +326,6 @@
             document.getElementById('page-title').innerText = titles[tabId] || 'لوحة التحكم';
         }
 
-        // دالة حذف الطلب من السحابة
         window.deleteOrder = function(orderId) {
             if (confirm("هل أنت متأكد من حذف هذا الطلب نهائياً؟")) {
                 remove(ref(db, `orders/${orderId}`)).then(() => {
@@ -339,7 +336,17 @@
             }
         }
 
-        // جلب البيانات ومراقبة الطلبات الجديدة لتشغيل النغمة تلقائياً
+        // دالة حذف العامل
+        window.deleteWorker = function(workerId) {
+            if (confirm("هل أنت متأكد من حذف هذا العامل نهائياً؟")) {
+                remove(ref(db, `workers/${workerId}`)).then(() => {
+                    alert("تم حذف العامل بنجاح.");
+                }).catch((error) => {
+                    alert("حدث خطأ أثناء الحذف: " + error.message);
+                });
+            }
+        }
+
         onValue(ref(db, 'orders'), (snapshot) => {
             const data = snapshot.val() || {};
             
@@ -356,7 +363,6 @@
             updateUI(data);
         });
 
-        // جلب قائمة العمال
         onValue(ref(db, 'workers'), (snapshot) => {
             const data = snapshot.val() || {};
             const workerSelect = document.getElementById('assigned-worker');
@@ -376,7 +382,10 @@
                             <span class="font-bold text-slate-900">${w.name}</span>
                             <span class="text-slate-500 mr-2">(${w.phone})</span>
                         </div>
-                        <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">مرتبط</span>
+                        <div class="flex items-center gap-2">
+                            <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">مرتبط</span>
+                            <button onclick="deleteWorker('${id}')" class="bg-red-500 hover:bg-red-600 text-white px-2.5 py-1 rounded-lg text-xs font-bold transition shadow">🗑️ حذف</button>
+                        </div>
                     </li>
                 `;
             });
@@ -400,18 +409,24 @@
                 if (isFinished) completed++;
                 else active++;
 
+                const custName = o.customerName || o.custName || '';
+                const carName = o.carName || '';
+                const carPlate = o.carPlate || '';
+                const assignedWorker = o.assignedWorkerName || o.assignedWorker || 'غير مسند';
+                const location = o.location || o.custLocation || 'غير متوفر';
+
                 const rowHtml = `
                     <tr class="border-b hover:bg-slate-50 transition">
                         <td class="p-3 font-mono font-bold text-blue-600">#${id.slice(-5)}</td>
-                        <td class="p-3 font-medium">${o.custName || o.customerName}</td>
-                        <td class="p-3">${o.carName} (${o.carPlate})</td>
-                        <td class="p-3 font-semibold text-slate-700">${o.assignedWorker || o.assignedWorkerName || 'غير مسند'}</td>
+                        <td class="p-3 font-medium">${custName}</td>
+                        <td class="p-3">${carName} (${carPlate})</td>
+                        <td class="p-3 font-semibold text-slate-700">${assignedWorker}</td>
                         <td class="p-3">
                             <span class="px-2 py-1 rounded-full text-xs font-bold ${isFinished ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}">
                                 ${o.status}
                             </span>
                         </td>
-                        <td class="p-3 text-xs text-slate-500">${o.custLocation || o.location || 'غير متوفر'}</td>
+                        <td class="p-3 text-xs text-slate-500">${location}</td>
                         <td class="p-3 text-center">
                             <button onclick="deleteOrder('${id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold transition shadow">🗑️ حذف</button>
                         </td>
@@ -423,9 +438,9 @@
                     <tr class="border-b">
                         <td class="p-2.5 border font-mono">#${id.slice(-5)}</td>
                         <td class="p-2.5 border">${new Date(o.timestamp || Date.now()).toLocaleDateString('ar-SA')}</td>
-                        <td class="p-2.5 border">${o.custName || o.customerName}</td>
-                        <td class="p-2.5 border">${o.carName}</td>
-                        <td class="p-2.5 border">${o.assignedWorker || o.assignedWorkerName || 'غير مسند'}</td>
+                        <td class="p-2.5 border">${custName}</td>
+                        <td class="p-2.5 border">${carName}</td>
+                        <td class="p-2.5 border">${assignedWorker}</td>
                         <td class="p-2.5 border">${o.status}</td>
                         <td class="p-2.5 border text-slate-500">تحرك: ${o.timeMoving || '-'} | وصل: ${o.timeArrived || '-'} | انتهى: ${o.timeFinished || '-'}</td>
                     </tr>
@@ -441,17 +456,16 @@
             }
         }
 
-        // إضافة طلب جديد
         document.getElementById('order-form').addEventListener('submit', function(e) {
             e.preventDefault();
             const newOrder = {
-                custName: document.getElementById('cust-name').value.trim(),
-                custPhone: document.getElementById('cust-phone').value.trim(),
+                customerName: document.getElementById('cust-name').value.trim(),
+                customerPhone: document.getElementById('cust-phone').value.trim(),
                 carName: document.getElementById('car-name').value.trim(),
                 carPlate: document.getElementById('car-plate').value.trim(),
-                custLocation: document.getElementById('cust-location').value.trim(),
+                location: document.getElementById('cust-location').value.trim(),
                 serviceType: document.getElementById('service-type').value,
-                assignedWorker: document.getElementById('assigned-worker').value,
+                assignedWorkerName: document.getElementById('assigned-worker').value,
                 status: 'تم إرسال الطلب',
                 timestamp: Date.now()
             };
@@ -463,7 +477,6 @@
             });
         });
 
-        // إضافة عامل جديد وكلمة المرور
         document.getElementById('worker-form').addEventListener('submit', function(e) {
             e.preventDefault();
             const newWorker = {
