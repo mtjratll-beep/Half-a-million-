@@ -41,6 +41,7 @@
                     <option value="ar">العربية</option>
                     <option value="en">English</option>
                     <option value="bn">বাংলা</option>
+                    <option value="zh">中文</option>
                 </select>
                 <button onclick="workerLogout()" id="btn-logout" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">خروج</button>
             </div>
@@ -52,6 +53,10 @@
         </div>
 
         <main class="flex-1 p-4 md:p-6 overflow-y-auto space-y-6 max-w-2xl mx-auto w-full">
+            <section class="bg-white p-4 rounded-xl shadow">
+                <h3 id="worker-service-guide-title" class="text-sm font-bold text-slate-700 mb-3">دليل الخدمات بالرسومات</h3>
+                <div id="worker-service-guide" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+            </section>
             <div id="status-box-section" class="bg-white p-4 rounded-xl shadow space-y-3">
                 <h3 id="txt-status-title" class="text-sm font-bold text-slate-700">تحديث حالتك الحالية للعمليات:</h3>
                 <div class="grid grid-cols-2 gap-3">
@@ -79,6 +84,10 @@
             </div>
         </main>
     </div>
+    <footer class="bg-white border-t text-center py-3 text-xs text-slate-500">
+        <div id="worker-rights">جميع الحقوق محفوظة © 2026 نصف مليون</div>
+        <div id="worker-programmed" class="font-bold text-blue-600 mt-1">برمجة أبو سيف</div>
+    </footer>
 
     <!-- عنصر صوتي احتياطي جاهز للعمل فوراً -->
     <audio id="alert-sound" preload="auto">
@@ -153,7 +162,7 @@
                 arrive: "📍 وصلت إلى موقع العميل",
                 finish: "✅ تم إنهاء الخدمة",
                 finishedBadge: "تم الانتهاء",
-                deleteBtn: "🗑️ حذف الطلب"
+                deleteBtn: "🗑️ حذف الطلب", rights:"جميع الحقوق محفوظة © 2026 نصف مليون", programmed:"برمجة أبو سيف", welcome:"مرحباً بك، الكابتن", noCurrent:"لا توجد طلبات جارية حالياً", noHistory:"لا توجد طلبات سابقة مكتملة", serviceTire:"تبديل كفرات", serviceBattery:"تغيير البطارية", serviceOilFilter:"تغيير زيت وسيفون", serviceOil:"تغيير زيت"
             },
             en: {
                 loginTitle: "Worker Login",
@@ -175,7 +184,7 @@
                 arrive: "📍 Arrived at Location",
                 finish: "✅ Complete Service",
                 finishedBadge: "Finished",
-                deleteBtn: "🗑️ Delete Order"
+                deleteBtn: "🗑️ Delete Order", rights:"All rights reserved © 2026 Half a Million", programmed:"Programmed by Abu Saif", welcome:"Welcome, Captain", noCurrent:"No active orders", noHistory:"No completed orders", serviceTire:"Tire Change", serviceBattery:"Battery Change", serviceOilFilter:"Oil & Filter Change", serviceOil:"Oil Change"
             },
             bn: {
                 loginTitle: "কর্মী লগইন",
@@ -197,7 +206,10 @@
                 arrive: "📍 লোকেশনে পৌঁছেছি",
                 finish: "✅ সেবা সম্পন্ন করুন",
                 finishedBadge: "সম্পন্ন",
-                deleteBtn: "🗑️ অর্ডার মুছুন"
+                deleteBtn: "🗑️ অর্ডার মুছুন", rights:"সকল অধিকার সংরক্ষিত © 2026 হাফ মিলিয়ন", programmed:"আবু সাইফের প্রোগ্রাম", welcome:"স্বাগতম, ক্যাপ্টেন", noCurrent:"কোনো চলমান অর্ডার নেই", noHistory:"কোনো সম্পন্ন অর্ডার নেই", serviceTire:"টায়ার পরিবর্তন", serviceBattery:"ব্যাটারি পরিবর্তন", serviceOilFilter:"তেল ও ফিল্টার পরিবর্তন", serviceOil:"তেল পরিবর্তন"
+            },
+            zh: {
+                loginTitle:"员工登录", loginSub:"请输入手机号码和密码", phoneLabel:"手机号码", passLabel:"密码", loginBtn:"进入员工面板", statusTitle:"更新当前状态：", btnOut:"🚗 离开现场（路上）", btnIn:"📍 已到现场", ordersTitle:"分配给您的订单：", historyTitle:"已完成订单记录：", tabCurrent:"当前订单", tabHistory:"历史订单", logout:"退出", callCust:"📞 联系客户", mapLoc:"🗺️ 打开地图", startMove:"🚗 开始前往客户", arrive:"📍 已到达客户位置", finish:"✅ 完成服务", finishedBadge:"已完成", deleteBtn:"🗑️ 删除订单", rights:"版权所有 © 2026 半百万", programmed:"阿布·赛义夫编程", welcome:"欢迎，队长", noCurrent:"暂无进行中的订单", noHistory:"暂无已完成订单", serviceTire:"更换轮胎", serviceBattery:"更换电池", serviceOilFilter:"更换机油和滤芯", serviceOil:"更换机油"
             }
         };
 
@@ -226,6 +238,10 @@
             if(document.getElementById('tab-btn-history')) document.getElementById('tab-btn-history').innerText = t.tabHistory;
             if(document.getElementById('btn-logout')) document.getElementById('btn-logout').innerText = t.logout;
             document.getElementById('lang-selector').value = currentLang;
+            document.getElementById('worker-rights').innerText = t.rights;
+            document.getElementById('worker-programmed').innerText = t.programmed;
+            renderServiceGuide();
+            if (currentWorkerName) document.getElementById('worker-welcome-title').innerText = `${t.welcome} ${currentWorkerName}`;
         }
 
         window.switchTab = function(tab) {
@@ -303,7 +319,7 @@
         function showDashboard(name) {
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('worker-dashboard').classList.remove('hidden');
-            document.getElementById('worker-welcome-title').innerText = `مرحباً بك، الكابتن ${name}`;
+            document.getElementById('worker-welcome-title').innerText = `${translations[currentLang].welcome} ${name}`;
             listenToAssignedOrders(name);
         }
 
@@ -325,6 +341,30 @@
                     alert("حدث خطأ أثناء الحذف: " + error.message);
                 });
             }
+        }
+
+        function serviceLabel(type) {
+            const t = translations[currentLang];
+            if (type === "tire") return {icon:"🛞",name:t.serviceTire};
+            if (type === "battery") return {icon:"🔋",name:t.serviceBattery};
+            if (type === "oilfilter") return {icon:"🛢️",name:t.serviceOilFilter};
+            if (type === "oil") return {icon:"🛢️",name:t.serviceOil};
+            const legacy = { "تغيير زيت المحرك":{icon:"🛢️",name:t.serviceOil}, "تغيير زيت وفلتر":{icon:"🛢️",name:t.serviceOilFilter}, "فحص دوري":{icon:"🔧",name:type} };
+            return legacy[type] || {icon:"🔧",name:type || ""};
+        }
+
+        function renderServiceGuide() {
+            const t = translations[currentLang];
+            const box = document.getElementById("worker-service-guide");
+            const title = document.getElementById("worker-service-guide-title");
+            if (!box) return;
+            title.innerText = currentLang === "ar" ? "دليل الخدمات بالرسومات" :
+                currentLang === "en" ? "Service Guide" :
+                currentLang === "bn" ? "সার্ভিস নির্দেশিকা" : "服务图示";
+            box.innerHTML = [
+                ["🛞", t.serviceTire], ["🔋", t.serviceBattery],
+                ["🛢️", t.serviceOilFilter], ["🛢️", t.serviceOil]
+            ].map(x => `<div class="rounded-xl bg-slate-50 border p-3 text-center"><div class="text-3xl mb-1">${x[0]}</div><b class="text-xs">${x[1]}</b></div>`).join("");
         }
 
         function listenToAssignedOrders(workerName) {
@@ -390,7 +430,7 @@
                                     <p><strong>العميل / Customer:</strong> ${custName}</p>
                                     <p><strong>السيارة / Car:</strong> ${carName} - ${carPlate}</p>
                                     <p><strong>الموقع / Location:</strong> <a href="${mapLink}" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline font-bold break-all">${locText}</a></p>
-                                    <p><strong>الخدمة / Service:</strong> ${serviceType}</p>
+                                    <p class="flex items-center gap-2"><strong>${serviceLabel(serviceType).icon} ${serviceLabel(serviceType).name}</strong></p>
                                 </div>
                                 <div class="grid grid-cols-2 gap-2 pt-1">
                                     <a href="${callLink}" class="bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-3 rounded-xl text-xs font-bold text-center transition flex items-center justify-center gap-1 shadow-sm">
@@ -424,10 +464,10 @@
                 isFirstLoad = false;
 
                 if (myOrdersCount === 0) {
-                    container.innerHTML = `<p class="text-slate-400 text-sm text-center py-4">لا توجد طلبات جارية حالياً</p>`;
+                    container.innerHTML = `<p class="text-slate-400 text-sm text-center py-4">${translations[currentLang].noCurrent}</p>`;
                 }
                 if (myHistoryCount === 0) {
-                    historyContainer.innerHTML = `<p class="text-slate-400 text-sm text-center py-4">لا توجد طلبات سابقة مكتملة</p>`;
+                    historyContainer.innerHTML = `<p class="text-slate-400 text-sm text-center py-4">${translations[currentLang].noHistory}</p>`;
                 }
             });
         }

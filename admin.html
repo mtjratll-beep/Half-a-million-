@@ -1,384 +1,189 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة المدير - خدمة تغيير الزيت</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="manifest" href="manifest.json">
-    <style>
-        @media print {
-            body * {
-                visibility: hidden;
-            }
-            #printable-report, #printable-report * {
-                visibility: visible;
-            }
-            #printable-report {
-                position: absolute;
-                right: 0;
-                top: 0;
-                width: 100%;
-            }
-            .no-print {
-                display: none !important;
-            }
-        }
-    </style>
-    <script>
-        (function() {
-            let entered = sessionStorage.getItem("admin_logged");
-            if (entered !== "true") {
-                let password = prompt("الرجاء إدخال كلمة سر صفحة المدير:");
-                if (password === "Half a million") {
-                    sessionStorage.setItem("admin_logged", "true");
-                } else {
-                    document.documentElement.innerHTML = "<body style='background:#0f172a; color:#ef4444; font-family:tahoma; display:flex; justify-content:center; align-items:center; height:100vh; margin:0;'><div style='text-align:center; padding:30px; background:#1e293b; border-radius:12px;'><h2 style='font-size:22px; margin-bottom:10px;'>عذراً، كلمة المرور غير صحيحة</h2><p style='color:#94a3b8; font-size:14px;'>تم رفض الدخول إلى صفحة المدير.</p></div></body>";
-                    throw new Error("Access Denied");
-                }
-            }
-        })();
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>لوحة المدير - نظام خدمة السيارات</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="manifest" href="manifest.json">
+<style>
+@media print{body *{visibility:hidden}#printable-report,#printable-report *{visibility:visible}#printable-report{position:absolute;right:0;top:0;width:100%}.no-print{display:none!important}}
+.service-card{transition:.2s;border:2px solid transparent}.service-card:hover{transform:translateY(-2px)}.service-card.selected{border-color:#2563eb;background:#eff6ff}
+.service-art{width:62px;height:62px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:34px;background:#f1f5f9}
+</style>
+<script>
+(function(){
+  const ADMIN_PASSWORD = "0852369147a";
+  if(sessionStorage.getItem("admin_logged") === "true") return;
 
-        function logout() {
-            sessionStorage.removeItem("admin_logged");
-            location.reload();
-        }
-    </script>
+  document.addEventListener("DOMContentLoaded", function(){
+    document.body.innerHTML = `
+      <div style="min-height:100vh;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:center;padding:20px;font-family:Tahoma,Arial,sans-serif;direction:rtl">
+        <div style="width:100%;max-width:430px;background:#1e293b;border:1px solid #334155;border-radius:24px;padding:30px;box-shadow:0 20px 60px rgba(0,0,0,.35);text-align:center">
+          <div style="font-size:58px;margin-bottom:12px">🔐</div>
+          <h2 style="margin:0 0 10px;font-size:25px">صفحة المدير مغلقة</h2>
+          <p style="color:#cbd5e1;margin:0 0 22px;line-height:1.8">أدخل كلمة المرور الصحيحة للدخول إلى لوحة المدير.</p>
+          <input id="adminPasswordInput" type="password" autocomplete="off" placeholder="كلمة مرور المدير"
+            style="width:100%;box-sizing:border-box;padding:15px;border-radius:14px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:18px;text-align:center;outline:none">
+          <button id="adminUnlockBtn" type="button"
+            style="width:100%;margin-top:14px;padding:15px;border:0;border-radius:14px;background:#2563eb;color:#fff;font-size:18px;font-weight:bold;cursor:pointer">دخول المدير</button>
+          <div id="adminError" style="display:none;margin-top:16px;padding:12px;border-radius:12px;background:#450a0a;color:#fca5a5">كلمة المرور غير صحيحة. تم رفض الدخول.</div>
+          <div style="margin-top:22px;color:#64748b;font-size:13px">🔒 الوصول إلى لوحة المدير محمي</div>
+        </div>
+      </div>`;
+
+    const input = document.getElementById("adminPasswordInput");
+    const btn = document.getElementById("adminUnlockBtn");
+    const error = document.getElementById("adminError");
+
+    function unlock(){
+      if(input.value === ADMIN_PASSWORD){
+        sessionStorage.setItem("admin_logged","true");
+        location.reload();
+      }else{
+        input.value = "";
+        error.style.display = "block";
+        input.focus();
+      }
+    }
+    btn.addEventListener("click", unlock);
+    input.addEventListener("keydown", e => { if(e.key === "Enter") unlock(); });
+    input.focus();
+  });
+})();
+</script>
 </head>
 <body class="bg-slate-900 font-sans">
+<div class="flex flex-col md:flex-row h-screen overflow-hidden bg-gray-100">
+<aside class="w-full md:w-64 bg-slate-800 text-white flex flex-col justify-between p-4 shrink-0">
+<div>
+<h1 id="brand-title" class="text-xl font-bold mb-4 md:mb-6 text-center text-blue-400">نظام خدمة السيارات</h1>
+<nav class="flex md:flex-col flex-wrap gap-1 md:space-y-2 justify-center">
+<button data-tab="home" onclick="switchTab('home')" data-i18n="navHome" class="flex-1 md:w-full text-center md:text-right py-2 px-3 rounded hover:bg-slate-700 text-sm font-medium">🏠 الرئيسية</button>
+<button data-tab="new-order" onclick="switchTab('new-order')" data-i18n="navNew" class="flex-1 md:w-full text-center md:text-right py-2 px-3 rounded hover:bg-slate-700 text-sm font-medium">➕ طلب جديد</button>
+<button data-tab="all-orders" onclick="switchTab('all-orders')" data-i18n="navOrders" class="flex-1 md:w-full text-center md:text-right py-2 px-3 rounded hover:bg-slate-700 text-sm font-medium">📋 الطلبات</button>
+<button data-tab="workers" onclick="switchTab('workers')" data-i18n="navWorkers" class="flex-1 md:w-full text-center md:text-right py-2 px-3 rounded hover:bg-slate-700 text-sm font-medium">👷 العمال</button>
+<button data-tab="reports" onclick="switchTab('reports')" data-i18n="navReports" class="flex-1 md:w-full text-center md:text-right py-2 px-3 rounded hover:bg-slate-700 text-sm font-medium">📊 التقارير</button>
+<button data-tab="settings" onclick="switchTab('settings')" data-i18n="navSettings" class="flex-1 md:w-full text-center md:text-right py-2 px-3 rounded hover:bg-slate-700 text-sm font-medium">⚙️ الإعدادات</button>
+</nav>
+</div>
+<div class="hidden md:block mt-4"><button onclick="logout()" data-i18n="logout" class="w-full text-right py-2.5 px-4 rounded bg-red-600 hover:bg-red-700 font-bold">🚪 تسجيل الخروج</button></div>
+</aside>
+<div class="flex-1 flex flex-col overflow-y-auto">
+<header class="bg-white shadow p-4 flex justify-between items-center gap-3">
+<h2 id="page-title" class="text-lg md:text-xl font-semibold text-gray-800">الرئيسية</h2>
+<div class="flex items-center gap-2">
+<span class="text-xs bg-blue-100 text-blue-800 font-bold px-3 py-1 rounded-full" data-i18n="manager">مدير النظام</span>
+<select id="lang-selector" onchange="changeLanguage(this.value)" class="border rounded-lg p-1.5 text-xs bg-white">
+<option value="ar">العربية</option><option value="en">English</option><option value="bn">বাংলা</option><option value="zh">中文</option>
+</select>
+</div>
+</header>
+<main class="p-4 md:p-6">
+<div id="tab-home" class="tab-content space-y-6">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="bg-white p-4 rounded-lg shadow border-r-4 border-blue-500"><p class="text-gray-500 text-sm" data-i18n="totalOrders">إجمالي الطلبات</p><h3 id="stat-total" class="text-2xl font-bold">0</h3></div>
+<div class="bg-white p-4 rounded-lg shadow border-r-4 border-amber-500"><p class="text-gray-500 text-sm" data-i18n="activeOrders">الطلبات الجارية</p><h3 id="stat-active" class="text-2xl font-bold">0</h3></div>
+<div class="bg-white p-4 rounded-lg shadow border-r-4 border-green-500"><p class="text-gray-500 text-sm" data-i18n="completedOrders">الطلبات المكتملة</p><h3 id="stat-completed" class="text-2xl font-bold">0</h3></div>
+</div>
+<div class="bg-white p-5 rounded-2xl shadow">
+<h3 class="font-bold text-slate-800 mb-3" data-i18n="serviceGuide">دليل الخدمات بالرسومات</h3>
+<div id="home-services" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+</div>
+</div>
 
-    <div class="flex flex-col md:flex-row h-screen overflow-hidden bg-gray-100">
-        <div class="w-full md:w-64 bg-slate-800 text-white flex flex-col justify-between p-4 shrink-0">
-            <div>
-                <h1 class="text-xl font-bold mb-4 md:mb-6 text-center text-amber-400">نظام تغيير الزيت</h1>
-                <nav class="flex md:flex-col flex-wrap gap-1 md:space-y-2 justify-center">
-                    <button onclick="switchTab('home')" class="flex-1 md:w-full text-center md:text-right py-2 px-3 md:px-4 rounded hover:bg-slate-700 transition text-sm font-medium">🏠 الرئيسية</button>
-                    <button onclick="switchTab('new-order')" class="flex-1 md:w-full text-center md:text-right py-2 px-3 md:px-4 rounded hover:bg-slate-700 transition text-sm font-medium">➕ طلب</button>
-                    <button onclick="switchTab('all-orders')" class="flex-1 md:w-full text-center md:text-right py-2 px-3 md:px-4 rounded hover:bg-slate-700 transition text-sm font-medium">📋 الطلبات</button>
-                    <button onclick="switchTab('workers')" class="flex-1 md:w-full text-center md:text-right py-2 px-3 md:px-4 rounded hover:bg-slate-700 transition text-sm font-medium">👷 العمال</button>
-                    <button onclick="switchTab('reports')" class="flex-1 md:w-full text-center md:text-right py-2 px-3 md:px-4 rounded hover:bg-slate-700 transition text-sm font-medium">📊 التقارير</button>
-                    <button onclick="switchTab('settings')" class="flex-1 md:w-full text-center md:text-right py-2 px-3 md:px-4 rounded hover:bg-slate-700 transition text-sm font-medium">⚙️ الإعدادات</button>
-                </nav>
-            </div>
-            <div class="hidden md:block mt-4">
-                <button onclick="logout()" class="w-full text-right py-2.5 px-4 rounded bg-red-600 hover:bg-red-700 transition font-bold">🚪 تسجيل الخروج</button>
-            </div>
-        </div>
+<div id="tab-new-order" class="tab-content hidden bg-white p-6 rounded-lg shadow max-w-2xl mx-auto">
+<h3 class="text-lg font-bold mb-4 text-slate-800" data-i18n="newOrderTitle">إنشاء طلب جديد وإسناده لعامل</h3>
+<form id="order-form" class="space-y-4">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div><label class="block text-sm font-medium" data-i18n="customerName">اسم العميل</label><input type="text" id="cust-name" required class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50"></div>
+<div><label class="block text-sm font-medium" data-i18n="phone">رقم الجوال</label><input type="text" id="cust-phone" required class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50"></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div><label class="block text-sm font-medium" data-i18n="car">اسم السيارة / النوع</label><input type="text" id="car-name" required class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50"></div>
+<div><label class="block text-sm font-medium" data-i18n="plate">رقم اللوحة</label><input type="text" id="car-plate" required class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50"></div>
+</div>
+<div><label class="block text-sm font-medium" data-i18n="location">رابط موقع العميل في خرائط Google</label><input type="url" id="cust-location" required class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50" placeholder="https://maps.app.goo.gl/..."></div>
+<div>
+<label class="block text-sm font-medium mb-2" data-i18n="service">الخدمة المطلوبة</label>
+<div id="service-picker" class="grid grid-cols-2 gap-3"></div>
+<input type="hidden" id="service-type" required>
+</div>
+<div><label class="block text-sm font-medium" data-i18n="assignWorker">إسناد إلى عامل</label><select id="assigned-worker" required class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50"></select></div>
+<button type="submit" class="w-full bg-blue-600 text-white p-3 rounded-xl font-bold hover:bg-blue-700 shadow" data-i18n="sendOrder">🔔 إرسال الطلب للعامل</button>
+</form>
+</div>
 
-        <div class="flex-1 flex flex-col overflow-y-auto">
-            <header class="bg-white shadow p-4 flex justify-between items-center">
-                <h2 id="page-title" class="text-lg md:text-xl font-semibold text-gray-800">الرئيسية</h2>
-                <span class="text-xs md:text-sm bg-blue-100 text-blue-800 font-bold px-3 py-1 rounded-full">مدير النظام</span>
-            </header>
+<div id="tab-all-orders" class="tab-content hidden bg-white p-4 md:p-6 rounded-lg shadow">
+<h3 class="text-lg font-bold mb-4" data-i18n="allOrdersTitle">جميع الطلبات والحالات اللحظية</h3>
+<div class="overflow-x-auto"><table class="w-full text-right border-collapse min-w-[760px]"><thead><tr class="bg-gray-100 border-b text-xs font-bold">
+<th class="p-3" data-i18n="orderNo">رقم الطلب</th><th class="p-3" data-i18n="customer">العميل</th><th class="p-3" data-i18n="car">السيارة</th><th class="p-3" data-i18n="worker">العامل</th><th class="p-3" data-i18n="status">الحالة</th><th class="p-3" data-i18n="details">الخدمة والموقع والتاريخ</th><th class="p-3" data-i18n="delete">حذف</th>
+</tr></thead><tbody id="orders-table-body" class="text-sm"></tbody></table></div>
+</div>
 
-            <main class="p-4 md:p-6">
-                <div id="tab-home" class="tab-content space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="bg-white p-4 rounded-lg shadow border-r-4 border-blue-500">
-                            <p class="text-gray-500 text-sm">إجمالي الطلبات</p>
-                            <h3 id="stat-total" class="text-2xl font-bold text-slate-800">0</h3>
-                        </div>
-                        <div class="bg-white p-4 rounded-lg shadow border-r-4 border-amber-500">
-                            <p class="text-gray-500 text-sm">الطلبات الجارية</p>
-                            <h3 id="stat-active" class="text-2xl font-bold text-slate-800">0</h3>
-                        </div>
-                        <div class="bg-white p-4 rounded-lg shadow border-r-4 border-green-500">
-                            <p class="text-gray-500 text-sm">الطلبات المكتملة</p>
-                            <h3 id="stat-completed" class="text-2xl font-bold text-slate-800">0</h3>
-                        </div>
-                    </div>
-                </div>
+<div id="tab-reports" class="tab-content hidden bg-white p-6 rounded-lg shadow space-y-6">
+<div class="no-print flex flex-col md:flex-row gap-4 items-end bg-slate-50 p-4 rounded-xl border">
+<div class="flex-1 w-full"><label class="block text-sm font-medium mb-1" data-i18n="chooseDate">اختر تاريخ التقرير</label><input type="date" id="report-date-filter" class="w-full p-2.5 border rounded-xl bg-white"></div>
+<div class="flex gap-2 w-full md:w-auto">
+<button onclick="filterReport()" class="flex-1 bg-blue-600 text-white px-4 py-2.5 rounded-xl font-bold" data-i18n="updateReport">🔄 تحديث التقرير</button>
+<button onclick="window.print()" class="flex-1 bg-emerald-600 text-white px-4 py-2.5 rounded-xl font-bold" data-i18n="print">🖨️ طباعة</button>
+</div></div>
+<div id="printable-report" class="bg-white p-4 rounded-xl space-y-4">
+<div class="text-center border-b pb-4"><h3 class="text-xl font-bold" data-i18n="reportTitle">تقرير نظام خدمة السيارات</h3><p id="report-date-label" class="text-xs text-slate-500 mt-1">جميع الطلبات</p></div>
+<div class="overflow-x-auto"><table class="w-full text-right border-collapse min-w-[750px] border"><thead><tr class="bg-slate-100 text-xs font-bold">
+<th class="p-2 border" data-i18n="orderNo">رقم الطلب</th><th class="p-2 border" data-i18n="dateTime">تاريخ ووقت إنشاء الطلب</th><th class="p-2 border" data-i18n="customer">العميل</th><th class="p-2 border" data-i18n="car">السيارة</th><th class="p-2 border" data-i18n="worker">العامل</th><th class="p-2 border" data-i18n="service">الخدمة</th><th class="p-2 border" data-i18n="status">الحالة</th>
+</tr></thead><tbody id="report-table-body" class="text-xs"></tbody></table></div></div>
+</div>
 
-                <div id="tab-new-order" class="tab-content hidden bg-white p-6 rounded-lg shadow max-w-2xl mx-auto">
-                    <h3 class="text-lg font-bold mb-4 text-slate-800">إنشاء طلب جديد وإسناده لعامل (سريع وبحالة جارية فوراً)</h3>
-                    <form id="order-form" class="space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700">اسم العميل</label>
-                                <input type="text" id="cust-name" required class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700">رقم الجوال</label>
-                                <input type="text" id="cust-phone" required class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700">اسم السيارة / النوع</label>
-                                <input type="text" id="car-name" required class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700">رقم اللوحة</label>
-                                <input type="text" id="car-plate" required class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700">رابط الموقع (صصق رابط خرائط جوجل هنا)</label>
-                            <input type="url" id="cust-location" required class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="https://maps.app.goo.gl/...">
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700">الخدمة المطلوبة</label>
-                                <select id="service-type" class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                                    <option value="تغيير زيت المحرك">تغيير زيت المحرك</option>
-                                    <option value="تغيير زيت وفلتر">تغيير زيت وفلتر</option>
-                                    <option value="فحص دوري">فحص دوري</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700">إسناد إلى عامل</label>
-                                <select id="assigned-worker" class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500" required></select>
-                            </div>
-                        </div>
-                        <button type="submit" class="w-full bg-blue-600 text-white p-3 rounded-xl font-bold hover:bg-blue-700 transition shadow">إرسال الطلب للسحابة فوراً</button>
-                    </form>
-                </div>
+<div id="tab-workers" class="tab-content hidden bg-white p-6 rounded-lg shadow max-w-xl mx-auto space-y-6">
+<form id="worker-form" class="space-y-4">
+<div><label class="block text-sm font-medium" data-i18n="workerName">اسم العامل</label><input type="text" id="worker-name" required class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50"></div>
+<div><label class="block text-sm font-medium" data-i18n="phone">رقم الجوال</label><input type="text" id="worker-phone" required class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50"></div>
+<div><label class="block text-sm font-medium" data-i18n="password">كلمة المرور</label><input type="password" id="worker-pass" required class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50"></div>
+<button type="submit" class="w-full bg-emerald-600 text-white py-2.5 rounded-xl font-bold" data-i18n="saveWorker">حفظ العامل</button>
+</form><ul id="workers-list" class="divide-y bg-slate-50 rounded-xl p-3"></ul>
+</div>
 
-                <div id="tab-all-orders" class="tab-content hidden bg-white p-4 md:p-6 rounded-lg shadow">
-                    <h3 class="text-lg font-bold mb-4 text-slate-800">قائمة جميع الطلبات والحالات اللحظية</h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-right border-collapse min-w-[700px]">
-                            <thead>
-                                <tr class="bg-gray-100 border-b text-xs text-slate-700 font-bold">
-                                    <th class="p-3">رقم الطلب</th>
-                                    <th class="p-3">العميل</th>
-                                    <th class="p-3">السيارة</th>
-                                    <th class="p-3">العامل المسند</th>
-                                    <th class="p-3">الحالة الحالية</th>
-                                    <th class="p-3">التفاصيل والموقع</th>
-                                    <th class="p-3 text-center">إجراء الحذف</th>
-                                </tr>
-                            </thead>
-                            <tbody id="orders-table-body" class="text-sm"></tbody>
-                        </table>
-                    </div>
-                </div>
+<div id="tab-settings" class="tab-content hidden bg-white p-6 rounded-lg shadow max-w-lg mx-auto space-y-4">
+<h3 class="text-lg font-bold" data-i18n="settingsTitle">إعدادات النظام</h3><button id="install-btn" class="w-full bg-indigo-600 text-white p-3 rounded-xl font-bold" data-i18n="install">📱 تثبيت التطبيق</button>
+</div>
+</main>
+<footer class="text-center py-4 text-xs bg-white border-t text-slate-500"><div data-i18n="rights">جميع الحقوق محفوظة © 2026 نصف مليون</div><div class="font-bold text-blue-600 mt-1" data-i18n="programmed">برمجة أبو سيف</div></footer>
+</div></div>
 
-                <div id="tab-reports" class="tab-content hidden bg-white p-6 rounded-lg shadow space-y-6">
-                    <div class="no-print flex flex-col md:flex-row gap-4 items-end bg-slate-50 p-4 rounded-xl border">
-                        <div class="flex-1 w-full">
-                            <label class="block text-sm font-medium text-slate-700 mb-1">تحديد حسب التاريخ:</label>
-                            <input type="date" id="report-date-filter" class="w-full p-2.5 border rounded-xl bg-white text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div class="flex gap-2 w-full md:w-auto">
-                            <button onclick="filterReport()" class="flex-1 md:flex-none bg-blue-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-blue-700 transition shadow">عرض التقرير</button>
-                            <button onclick="window.print()" class="flex-1 md:flex-none bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-emerald-700 transition shadow">🖨️ طباعة</button>
-                        </div>
-                    </div>
-                    <div id="printable-report" class="bg-white p-4 rounded-xl space-y-4">
-                        <div class="text-center border-b pb-4">
-                            <h3 class="text-xl font-bold text-slate-800">تقرير نظام تغيير الزيت</h3>
-                            <p id="report-date-label" class="text-xs text-slate-500 mt-1">جميع الطلبات</p>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-right border-collapse min-w-[600px] border border-slate-200">
-                                <thead>
-                                    <tr class="bg-slate-100 text-xs font-bold text-slate-700">
-                                        <th class="p-2.5 border">رقم الطلب</th>
-                                        <th class="p-2.5 border">التاريخ</th>
-                                        <th class="p-2.5 border">العميل</th>
-                                        <th class="p-2.5 border">السيارة</th>
-                                        <th class="p-2.5 border">العامل</th>
-                                        <th class="p-2.5 border">الحالة</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="report-table-body" class="text-xs text-slate-700"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="tab-workers" class="tab-content hidden bg-white p-6 rounded-lg shadow max-w-xl mx-auto space-y-6">
-                    <form id="worker-form" class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700">اسم العامل</label>
-                            <input type="text" id="worker-name" required class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700">رقم الجوال</label>
-                            <input type="text" id="worker-phone" required class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700">كلمة المرور</label>
-                            <input type="password" id="worker-pass" required class="w-full mt-1 p-2.5 border rounded-xl bg-slate-50 text-sm">
-                        </div>
-                        <button type="submit" class="w-full bg-emerald-600 text-white py-2.5 rounded-xl text-sm font-bold">حفظ العامل</button>
-                    </form>
-                    <ul id="workers-list" class="divide-y bg-slate-50 rounded-xl p-3"></ul>
-                </div>
-
-                <div id="tab-settings" class="tab-content hidden bg-white p-6 rounded-lg shadow max-w-lg mx-auto space-y-4">
-                    <h3 class="text-lg font-bold text-slate-800">إعدادات النظام</h3>
-                    <button id="install-btn" class="w-full bg-indigo-600 text-white p-3 rounded-xl font-bold text-sm">📱 تثبيت التطبيق</button>
-                </div>
-            </main>
-        </div>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyCNgBpEMZ1WGQ9zkbJQDb9y6OJweFqWNpg",
-            authDomain: "half-27475.firebaseapp.com",
-            databaseURL: "https://half-27475-default-rtdb.firebaseio.com",
-            projectId: "half-27475",
-            storageBucket: "half-27475.firebasestorage.app",
-            messagingSenderId: "270803082259",
-            appId: "1:270803082259:web:eaa8ca526791b2280fb3e6",
-            measurementId: "G-B31TSL4WN9"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-
-        let allOrdersCache = {};
-
-        window.switchTab = function(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.getElementById('tab-' + tabId).classList.remove('hidden');
-            document.getElementById('page-title').innerText = {
-                'home': 'الرئيسية', 'new-order': 'إنشاء طلب جديد', 'all-orders': 'قائمة جميع الطلبات',
-                'workers': 'إدارة العمال', 'reports': 'التقارير', 'settings': 'الإعدادات'
-            }[tabId];
-            if(tabId === 'reports') {
-                filterReport();
-            }
-        };
-
-        function loadWorkersDropdown() {
-            onValue(ref(db, 'workers'), (snapshot) => {
-                const select = document.getElementById('assigned-worker');
-                const workersListUl = document.getElementById('workers-list');
-                select.innerHTML = '<option value="">اختر العامل...</option>';
-                workersListUl.innerHTML = '';
-
-                if (snapshot.exists()) {
-                    snapshot.forEach((childSnapshot) => {
-                        const worker = childSnapshot.val();
-                        const key = childSnapshot.key;
-                        select.innerHTML += `<option value="${worker.name}">${worker.name} (${worker.phone})</option>`;
-                        workersListUl.innerHTML += `<li class="py-2 flex justify-between items-center text-sm"><span><b>${worker.name}</b> - ${worker.phone}</span><button onclick="deleteWorker('${key}')" class="text-red-600 text-xs font-bold bg-red-50 px-2 py-1 rounded">حذف</button></li>`;
-                    });
-                }
-            });
-        }
-        loadWorkersDropdown();
-
-        document.getElementById('worker-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            push(ref(db, 'workers'), {
-                name: document.getElementById('worker-name').value.trim(),
-                phone: document.getElementById('worker-phone').value.trim(),
-                pass: document.getElementById('worker-pass').value.trim()
-            }).then(() => { alert('تم إضافة العامل'); document.getElementById('worker-form').reset(); });
-        });
-
-        window.deleteWorker = (key) => { if(confirm('حذف العامل؟')) remove(ref(db, 'workers/' + key)); };
-
-        document.getElementById('order-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const orderData = {
-                customerName: document.getElementById('cust-name').value.trim(),
-                customerPhone: document.getElementById('cust-phone').value.trim(),
-                carName: document.getElementById('car-name').value.trim(),
-                carPlate: document.getElementById('car-plate').value.trim(),
-                location: document.getElementById('cust-location').value.trim(),
-                serviceType: document.getElementById('service-type').value,
-                assignedWorker: document.getElementById('assigned-worker').value,
-                status: 'جارية',
-                createdAt: new Date().toLocaleString('ar-SA')
-            };
-
-            push(ref(db, 'orders'), orderData).then(() => {
-                alert('تم إرسال الطلب وإسناده بنجاح');
-                document.getElementById('order-form').reset();
-                switchTab('all-orders');
-            });
-        });
-
-        onValue(ref(db, 'orders'), (snapshot) => {
-            const tbody = document.getElementById('orders-table-body');
-            tbody.innerHTML = '';
-            allOrdersCache = {};
-            let total = 0, active = 0, completed = 0;
-
-            if (snapshot.exists()) {
-                snapshot.forEach((childSnapshot) => {
-                    const id = childSnapshot.key;
-                    const order = childSnapshot.val();
-                    allOrdersCache[id] = order;
-                    total++;
-                    if (order.status === 'مكتملة' || order.status === 'تم الانتهاء') completed++; else active++;
-
-                    // التحقق مما إذا كان الموقع رابطاً مباشراً لفتح الموقع بضغطة زر عند العامل
-                    let locationHtml = order.location;
-                    if (order.location && (order.location.startsWith('http://') || order.location.startsWith('https://'))) {
-                        locationHtml = `<a href="${order.location}" target="_blank" class="inline-block bg-blue-600 text-white px-2.5 py-1 rounded-lg text-xs font-bold hover:bg-blue-700 transition shadow mt-1">📍 فتح الموقع</a>`;
-                    }
-
-                    tbody.innerHTML += `
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="p-3 font-mono text-xs">${id.substring(0, 6)}#</td>
-                            <td class="p-3">${order.customerName}<br><span class="text-xs text-gray-500">${order.customerPhone}</span></td>
-                            <td class="p-3">${order.carName}<br><span class="text-xs text-gray-500">${order.carPlate}</span></td>
-                            <td class="p-3 font-bold text-blue-600">${order.assignedWorker || 'غير مسند'}</td>
-                            <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-bold ${order.status === 'مكتملة' || order.status === 'تم الانتهاء' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}">${order.status}</span></td>
-                            <td class="p-3 text-xs text-gray-600">${order.serviceType}<br>${locationHtml}<br><span class="text-[10px] text-slate-400">${order.createdAt}</span></td>
-                            <td class="p-3 text-center"><button onclick="deleteOrder('${id}')" class="bg-red-100 text-red-700 px-2.5 py-1 rounded text-xs font-bold">حذف</button></td>
-                        </tr>`;
-                });
-            } else {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-gray-400">لا توجد طلبات مسجلة</td></tr>';
-            }
-
-            document.getElementById('stat-total').innerText = total;
-            document.getElementById('stat-active').innerText = active;
-            document.getElementById('stat-completed').innerText = completed;
-            filterReport();
-        });
-
-        window.deleteOrder = (id) => { if(confirm('حذف الطلب؟')) remove(ref(db, 'orders/' + id)); };
-
-        window.filterReport = function() {
-            const selectedDate = document.getElementById('report-date-filter').value;
-            const tbody = document.getElementById('report-table-body');
-            const dateLabel = document.getElementById('report-date-label');
-            if(!tbody) return;
-            tbody.innerHTML = '';
-            
-            let hasData = false;
-            if (selectedDate) {
-                dateLabel.innerText = `التاريخ المحدد: ${selectedDate}`;
-            } else {
-                dateLabel.innerText = "جميع الطلبات المسجلة";
-            }
-
-            Object.entries(allOrdersCache).forEach(([id, order]) => {
-                let match = true;
-                if (selectedDate && order.createdAt) {
-                    match = order.createdAt.includes(selectedDate);
-                }
-
-                if (match) {
-                    hasData = true;
-                    tbody.innerHTML += `
-                        <tr class="border-b">
-                            <td class="p-2.5 border font-mono text-[11px]">${id.substring(0, 6)}#</td>
-                            <td class="p-2.5 border">${order.createdAt || '-'}</td>
-                            <td class="p-2.5 border">${order.customerName}<br><span class="text-[10px] text-gray-500">${order.customerPhone}</span></td>
-                            <td class="p-2.5 border">${order.carName} (${order.carPlate})</td>
-                            <td class="p-2.5 border font-bold text-blue-600">${order.assignedWorker || 'غير مسند'}</td>
-                            <td class="p-2.5 border"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${order.status === 'مكتملة' || order.status === 'تم الانتهاء' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}">${order.status}</span></td>
-                        </tr>`;
-                }
-            });
-
-            if (!hasData) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center p-4 text-gray-400">لا توجد بيانات مطابقة لهذا التاريخ</td></tr>';
-            }
-        };
-    </script>
-</body>
-</html>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import {getDatabase,ref,push,onValue,remove} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+const firebaseConfig={apiKey:"AIzaSyCNgBpEMZ1WGQ9zkbJQDb9y6OJweFqWNpg",authDomain:"half-27475.firebaseapp.com",databaseURL:"https://half-27475-default-rtdb.firebaseio.com",projectId:"half-27475",storageBucket:"half-27475.firebasestorage.app",messagingSenderId:"270803082259",appId:"1:270803082259:web:eaa8ca526791b2280fb3e6",measurementId:"G-B31TSL4WN9"};
+const db=getDatabase(initializeApp(firebaseConfig)); let allOrdersCache={}; let currentLang=localStorage.getItem("admin_lang")||"ar";
+const services=[
+{id:"tire",icon:"🛞",ar:"تبديل كفرات",en:"Tire Change",bn:"টায়ার পরিবর্তন",zh:"更换轮胎"},
+{id:"battery",icon:"🔋",ar:"تغيير البطارية",en:"Battery Change",bn:"ব্যাটারি পরিবর্তন",zh:"更换电池"},
+{id:"oilfilter",icon:"🛢️",ar:"تغيير زيت وسيفون",en:"Oil & Filter Change",bn:"তেল ও ফিল্টার পরিবর্তন",zh:"更换机油和滤芯"},
+{id:"oil",icon:"🛢️",ar:"تغيير زيت",en:"Oil Change",bn:"তেল পরিবর্তন",zh:"更换机油"}];
+const tr={
+ar:{brand:"نظام خدمة السيارات",manager:"مدير النظام",navHome:"🏠 الرئيسية",navNew:"➕ طلب جديد",navOrders:"📋 الطلبات",navWorkers:"👷 العمال",navReports:"📊 التقارير",navSettings:"⚙️ الإعدادات",logout:"🚪 تسجيل الخروج",home:"الرئيسية",newPage:"إنشاء طلب جديد",ordersPage:"قائمة جميع الطلبات",workersPage:"إدارة العمال",reportsPage:"التقارير",settingsPage:"الإعدادات",totalOrders:"إجمالي الطلبات",activeOrders:"الطلبات الجارية",completedOrders:"الطلبات المكتملة",serviceGuide:"دليل الخدمات بالرسومات",newOrderTitle:"إنشاء طلب جديد وإسناده لعامل",customerName:"اسم العميل",phone:"رقم الجوال",car:"اسم السيارة / النوع",plate:"رقم اللوحة",location:"رابط موقع العميل في خرائط Google",service:"الخدمة المطلوبة",assignWorker:"إسناد إلى عامل",sendOrder:"🔔 إرسال الطلب للعامل",allOrdersTitle:"جميع الطلبات والحالات اللحظية",orderNo:"رقم الطلب",customer:"العميل",worker:"العامل",status:"الحالة",details:"الخدمة والموقع والتاريخ",delete:"حذف",chooseDate:"اختر تاريخ التقرير",updateReport:"🔄 تحديث التقرير",print:"🖨️ طباعة",reportTitle:"تقرير نظام خدمة السيارات",dateTime:"تاريخ ووقت إنشاء الطلب",workerName:"اسم العامل",password:"كلمة المرور",saveWorker:"حفظ العامل",settingsTitle:"إعدادات النظام",install:"📱 تثبيت التطبيق",rights:"جميع الحقوق محفوظة © 2026 نصف مليون",programmed:"برمجة أبو سيف",chooseWorker:"اختر العامل...",noOrders:"لا توجد طلبات مسجلة",noReport:"لا توجد بيانات مطابقة لهذا التاريخ",notAssigned:"غير مسند",started:"جارية",finished:"مكتملة"},
+en:{brand:"Car Service System",manager:"System Manager",navHome:"🏠 Home",navNew:"➕ New Order",navOrders:"📋 Orders",navWorkers:"👷 Workers",navReports:"📊 Reports",navSettings:"⚙️ Settings",logout:"🚪 Logout",home:"Home",newPage:"Create New Order",ordersPage:"All Orders",workersPage:"Workers Management",reportsPage:"Reports",settingsPage:"Settings",totalOrders:"Total Orders",activeOrders:"Active Orders",completedOrders:"Completed Orders",serviceGuide:"Service Guide",newOrderTitle:"Create and Assign New Order",customerName:"Customer Name",phone:"Mobile Number",car:"Car / Type",plate:"Plate Number",location:"Customer Google Maps Location",service:"Requested Service",assignWorker:"Assign to Worker",sendOrder:"🔔 Send Order to Worker",allOrdersTitle:"All Orders and Live Status",orderNo:"Order No.",customer:"Customer",worker:"Worker",status:"Status",details:"Service, Location & Date",delete:"Delete",chooseDate:"Choose report date",updateReport:"🔄 Update Report",print:"🖨️ Print",reportTitle:"Car Service System Report",dateTime:"Order Creation Date & Time",workerName:"Worker Name",password:"Password",saveWorker:"Save Worker",settingsTitle:"System Settings",install:"📱 Install App",rights:"All rights reserved © 2026 Half a Million",programmed:"Programmed by Abu Saif",chooseWorker:"Choose worker...",noOrders:"No orders registered",noReport:"No data for this date",notAssigned:"Not assigned",started:"Active",finished:"Completed"},
+bn:{brand:"গাড়ি সার্ভিস সিস্টেম",manager:"সিস্টেম ম্যানেজার",navHome:"🏠 হোম",navNew:"➕ নতুন অর্ডার",navOrders:"📋 অর্ডার",navWorkers:"👷 কর্মী",navReports:"📊 রিপোর্ট",navSettings:"⚙️ সেটিংস",logout:"🚪 লগআউট",home:"হোম",newPage:"নতুন অর্ডার",ordersPage:"সব অর্ডার",workersPage:"কর্মী ব্যবস্থাপনা",reportsPage:"রিপোর্ট",settingsPage:"সেটিংস",totalOrders:"মোট অর্ডার",activeOrders:"চলমান অর্ডার",completedOrders:"সম্পন্ন অর্ডার",serviceGuide:"সার্ভিস নির্দেশিকা",newOrderTitle:"নতুন অর্ডার তৈরি ও কর্মী বরাদ্দ",customerName:"গ্রাহকের নাম",phone:"মোবাইল নম্বর",car:"গাড়ি / ধরন",plate:"প্লেট নম্বর",location:"গ্রাহকের Google Maps অবস্থান",service:"প্রয়োজনীয় সার্ভিস",assignWorker:"কর্মী বরাদ্দ",sendOrder:"🔔 কর্মীর কাছে অর্ডার পাঠান",allOrdersTitle:"সব অর্ডার ও বর্তমান অবস্থা",orderNo:"অর্ডার নং",customer:"গ্রাহক",worker:"কর্মী",status:"অবস্থা",details:"সার্ভিস, অবস্থান ও তারিখ",delete:"মুছুন",chooseDate:"রিপোর্টের তারিখ",updateReport:"🔄 রিপোর্ট আপডেট",print:"🖨️ প্রিন্ট",reportTitle:"গাড়ি সার্ভিস সিস্টেম রিপোর্ট",dateTime:"অর্ডার তৈরির তারিখ ও সময়",workerName:"কর্মীর নাম",password:"পাসওয়ার্ড",saveWorker:"কর্মী সংরক্ষণ",settingsTitle:"সিস্টেম সেটিংস",install:"📱 অ্যাপ ইনস্টল",rights:"সকল অধিকার সংরক্ষিত © 2026 হাফ মিলিয়ন",programmed:"আবু সাইফের প্রোগ্রাম",chooseWorker:"কর্মী নির্বাচন করুন...",noOrders:"কোনো অর্ডার নেই",noReport:"এই তারিখে কোনো তথ্য নেই",notAssigned:"বরাদ্দ নেই",started:"চলমান",finished:"সম্পন্ন"},
+zh:{brand:"汽车服务系统",manager:"系统管理员",navHome:"🏠 首页",navNew:"➕ 新订单",navOrders:"📋 订单",navWorkers:"👷 工人",navReports:"📊 报告",navSettings:"⚙️ 设置",logout:"🚪 退出",home:"首页",newPage:"创建新订单",ordersPage:"全部订单",workersPage:"工人管理",reportsPage:"报告",settingsPage:"设置",totalOrders:"订单总数",activeOrders:"进行中订单",completedOrders:"已完成订单",serviceGuide:"服务图示",newOrderTitle:"创建并分配新订单",customerName:"客户姓名",phone:"手机号码",car:"车辆 / 类型",plate:"车牌号码",location:"客户 Google 地图位置",service:"所需服务",assignWorker:"分配工人",sendOrder:"🔔 发送订单给工人",allOrdersTitle:"全部订单与实时状态",orderNo:"订单号",customer:"客户",worker:"工人",status:"状态",details:"服务、位置和日期",delete:"删除",chooseDate:"选择报告日期",updateReport:"🔄 更新报告",print:"🖨️ 打印",reportTitle:"汽车服务系统报告",dateTime:"订单创建日期和时间",workerName:"工人姓名",password:"密码",saveWorker:"保存工人",settingsTitle:"系统设置",install:"📱 安装应用",rights:"版权所有 © 2026 半百万",programmed:"阿布·赛义夫编程",chooseWorker:"选择工人...",noOrders:"没有订单",noReport:"该日期没有数据",notAssigned:"未分配",started:"进行中",finished:"已完成"}};
+function T(k){return tr[currentLang][k]||k}
+function applyLanguage(){document.documentElement.lang=currentLang;document.documentElement.dir=currentLang==="en"?"ltr":"rtl";document.querySelectorAll("[data-i18n]").forEach(e=>e.textContent=T(e.dataset.i18n));document.getElementById("lang-selector").value=currentLang;renderServices();renderOrders();filterReport()}
+window.changeLanguage=l=>{currentLang=l;localStorage.setItem("admin_lang",l);applyLanguage()}
+function renderServices(){const picker=document.getElementById("service-picker"),home=document.getElementById("home-services"); if(!picker)return; const old=document.getElementById("service-type").value; picker.innerHTML="";home.innerHTML="";services.forEach(s=>{const label=s[currentLang];picker.innerHTML+=`<button type="button" class="service-card p-3 rounded-xl bg-slate-50 text-right flex items-center gap-3" data-service="${s.id}"><span class="service-art">${s.icon}</span><b>${label}</b></button>`;home.innerHTML+=`<div class="p-3 rounded-xl bg-slate-50 text-center"><div class="service-art mx-auto mb-2">${s.icon}</div><b class="text-sm">${label}</b></div>`});picker.querySelectorAll("[data-service]").forEach(b=>b.onclick=()=>{document.querySelectorAll(".service-card").forEach(x=>x.classList.remove("selected"));b.classList.add("selected");document.getElementById("service-type").value=b.dataset.service});if(old){const b=picker.querySelector(`[data-service="${old}"]`);if(b)b.click()}}
+function serviceName(id){const s=services.find(x=>x.id===id);return s?s[currentLang]:id}
+window.switchTab=tab=>{document.querySelectorAll(".tab-content").forEach(e=>e.classList.add("hidden"));document.getElementById("tab-"+tab).classList.remove("hidden");const titles={home:"home", "new-order":"newPage","all-orders":"ordersPage",workers:"workersPage",reports:"reportsPage",settings:"settingsPage"};document.getElementById("page-title").textContent=T(titles[tab]);if(tab==="reports")filterReport()}
+window.logout=()=>{sessionStorage.removeItem("admin_logged");location.reload()};
+function loadWorkersDropdown(){onValue(ref(db,"workers"),snap=>{const s=document.getElementById("assigned-worker"),ul=document.getElementById("workers-list");s.innerHTML=`<option value="">${T("chooseWorker")}</option>`;ul.innerHTML="";if(snap.exists())snap.forEach(c=>{const w=c.val(),k=c.key;s.innerHTML+=`<option value="${w.name}">${w.name} (${w.phone})</option>`;ul.innerHTML+=`<li class="py-2 flex justify-between items-center text-sm"><span><b>${w.name}</b> - ${w.phone}</span><button onclick="deleteWorker('${k}')" class="text-red-600 font-bold">${T("delete")}</button></li>`})})}
+loadWorkersDropdown();
+document.getElementById("worker-form").addEventListener("submit",e=>{e.preventDefault();push(ref(db,"workers"),{name:document.getElementById("worker-name").value.trim(),phone:document.getElementById("worker-phone").value.trim(),pass:document.getElementById("worker-pass").value.trim()}).then(()=>{alert("تم حفظ العامل");e.target.reset()})});
+window.deleteWorker=k=>{if(confirm("حذف العامل؟"))remove(ref(db,"workers/"+k))};
+document.getElementById("order-form").addEventListener("submit",e=>{e.preventDefault();const ms=Date.now();const data={customerName:document.getElementById("cust-name").value.trim(),customerPhone:document.getElementById("cust-phone").value.trim(),carName:document.getElementById("car-name").value.trim(),carPlate:document.getElementById("car-plate").value.trim(),location:document.getElementById("cust-location").value.trim(),serviceType:document.getElementById("service-type").value,assignedWorker:document.getElementById("assigned-worker").value,status:"جارية",createdAtMs:ms,createdAt:new Date(ms).toISOString()};if(!data.serviceType){alert("اختر الخدمة");return}push(ref(db,"orders"),data).then(()=>{alert("تم إرسال الطلب للعامل بنجاح 🔔");e.target.reset();document.querySelectorAll(".service-card").forEach(x=>x.classList.remove("selected"));document.getElementById("service-type").value="";switchTab("all-orders")})});
+function dateTime(o){const ms=o.createdAtMs||Date.parse(o.createdAt||"");if(!isNaN(ms))return new Intl.DateTimeFormat(currentLang==="zh"?"zh-CN":currentLang,{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit"}).format(new Date(ms));return o.createdAt||"-"}
+function localDate(o){const ms=o.createdAtMs||Date.parse(o.createdAt||"");if(isNaN(ms))return "";const d=new Date(ms);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
+function renderOrders(){const tb=document.getElementById("orders-table-body");if(!tb)return;tb.innerHTML="";let total=0,active=0,completed=0;Object.entries(allOrdersCache).reverse().forEach(([id,o])=>{total++;const done=o.status==="تم الانتهاء"||o.status==="مكتملة"||o.status==="Finished";done?completed++:active++;const loc=o.location?.startsWith("http")?`<a href="${o.location}" target="_blank" class="text-blue-600 font-bold">📍 فتح الموقع</a>`:o.location||"-";tb.innerHTML+=`<tr class="border-b hover:bg-gray-50"><td class="p-3 font-mono">#${id.slice(-6)}</td><td class="p-3">${o.customerName||"-"}<br><span class="text-xs text-gray-500">${o.customerPhone||""}</span></td><td class="p-3">${o.carName||"-"}<br><span class="text-xs text-gray-500">${o.carPlate||""}</span></td><td class="p-3 font-bold text-blue-600">${o.assignedWorker||T("notAssigned")}</td><td class="p-3">${o.status||"-"}</td><td class="p-3 text-xs">${serviceName(o.serviceType)}<br>${loc}<br><span class="text-slate-400">${dateTime(o)}</span></td><td class="p-3"><button onclick="deleteOrder('${id}')" class="bg-red-100 text-red-700 px-2 py-1 rounded font-bold">${T("delete")}</button></td></tr>`});if(!total)tb.innerHTML=`<tr><td colspan="7" class="text-center p-4 text-gray-400">${T("noOrders")}</td></tr>`;document.getElementById("stat-total").textContent=total;document.getElementById("stat-active").textContent=active;document.getElementById("stat-completed").textContent=completed}
+window.deleteOrder=id=>{if(confirm("حذف الطلب؟"))remove(ref(db,"orders/"+id))};
+window.filterReport=()=>{const selected=document.getElementById("report-date-filter").value,tb=document.getElementById("report-table-body");tb.innerHTML="";document.getElementById("report-date-label").textContent=selected?`${T("chooseDate")}: ${selected}`:T("totalOrders");let n=0;Object.entries(allOrdersCache).reverse().forEach(([id,o])=>{if(selected&&localDate(o)!==selected)return;n++;tb.innerHTML+=`<tr class="border-b"><td class="p-2 border">#${id.slice(-6)}</td><td class="p-2 border">${dateTime(o)}</td><td class="p-2 border">${o.customerName||"-"}<br>${o.customerPhone||""}</td><td class="p-2 border">${o.carName||"-"} (${o.carPlate||""})</td><td class="p-2 border">${o.assignedWorker||T("notAssigned")}</td><td class="p-2 border">${serviceName(o.serviceType)}</td><td class="p-2 border">${o.status||"-"}</td></tr>`});if(!n)tb.innerHTML=`<tr><td colspan="7" class="text-center p-4 text-gray-400">${T("noReport")}</td></tr>`};
+onValue(ref(db,"orders"),snap=>{allOrdersCache={}; if(snap.exists()) snap.forEach(c=>{allOrdersCache[c.key]=c.val()});renderOrders();filterReport()});
+applyLanguage();
+</script>
+</body></html>
