@@ -62,7 +62,7 @@ button{transition:.2s}
 </style>
 </head>
 <body class="bg-slate-900 font-sans">
-<audio id="manager-alert-sound" preload="auto"><source src="تنبيه_طلب_جديد.wav" type="audio/wav"></audio>
+
 <div id="manager-alert" class="hidden fixed inset-0 z-[99999] bg-slate-950/90 flex items-center justify-center p-5">
   <div class="w-full max-w-md bg-white rounded-3xl p-7 text-center shadow-2xl border-4 border-cyan-500 animate-pulse">
     <div class="text-6xl mb-3">🔔</div>
@@ -213,47 +213,12 @@ function localDate(o){const ms=o.createdAtMs||Date.parse(o.createdAt||"");if(isN
 function renderOrders(){const tb=document.getElementById("orders-table-body");if(!tb)return;tb.innerHTML="";let total=0,active=0,completed=0;Object.entries(allOrdersCache).reverse().forEach(([id,o])=>{total++;const done=o.status==="تم الانتهاء"||o.status==="مكتملة"||o.status==="Finished";done?completed++:active++;const loc=o.location?.startsWith("http")?`<a href="${o.location}" target="_blank" class="text-blue-600 font-bold">📍 فتح الموقع</a>`:o.location||"-";tb.innerHTML+=`<tr class="border-b hover:bg-gray-50"><td class="p-3 font-mono">#${id.slice(-6)}</td><td class="p-3">${o.customerName||"-"}<br><span class="text-xs text-gray-500">${o.customerPhone||""}</span></td><td class="p-3">${o.carName||"-"}<br><span class="text-xs text-gray-500">${o.carPlate||""}</span></td><td class="p-3 font-bold text-blue-600">${o.assignedWorker||T("notAssigned")}</td><td class="p-3">${o.status||"-"}</td><td class="p-3 text-xs">${serviceName(o.serviceType)}${(o.oilLiters||0)>0?`<br>🛢️ ${o.oilLiters} L`:''}<br>${loc}<br><span class="text-slate-400">${dateTime(o)}</span></td><td class="p-3"><button onclick="deleteOrder('${id}')" class="bg-red-100 text-red-700 px-2 py-1 rounded font-bold">${T("delete")}</button></td></tr>`});if(!total)tb.innerHTML=`<tr><td colspan="7" class="text-center p-4 text-gray-400">${T("noOrders")}</td></tr>`;document.getElementById("stat-total").textContent=total;document.getElementById("stat-active").textContent=active;document.getElementById("stat-completed").textContent=completed}
 window.deleteOrder=id=>{if(confirm("حذف الطلب؟"))remove(ref(db,"orders/"+id))};
 window.filterReport=()=>{const selected=document.getElementById("report-date-filter").value,tb=document.getElementById("report-table-body");tb.innerHTML="";document.getElementById("report-date-label").textContent=selected?`${T("chooseDate")}: ${selected}`:T("totalOrders");let n=0,totalLiters=0,oilOrders=0;Object.entries(allOrdersCache).reverse().forEach(([id,o])=>{if(selected&&localDate(o)!==selected)return;n++;const liters=Number(o.oilLiters)||0;totalLiters+=liters;if(liters>0)oilOrders++;tb.innerHTML+=`<tr class="border-b"><td class="p-2 border">#${id.slice(-6)}</td><td class="p-2 border">${dateTime(o)}</td><td class="p-2 border">${o.customerName||"-"}<br>${o.customerPhone||""}</td><td class="p-2 border">${o.carName||"-"} (${o.carPlate||""})</td><td class="p-2 border">${o.assignedWorker||T("notAssigned")}</td><td class="p-2 border">${serviceName(o.serviceType)}</td><td class="p-2 border font-bold">${liters>0?liters+" L":"-"}</td><td class="p-2 border">${o.status||"-"}</td></tr>`});if(!n)tb.innerHTML=`<tr><td colspan="8" class="text-center p-4 text-gray-400">${T("noReport")}</td></tr>`;document.getElementById("report-orders-count").textContent=n;document.getElementById("report-liters-total").textContent=Number.isInteger(totalLiters)?totalLiters:totalLiters.toFixed(1);document.getElementById("report-oil-orders").textContent=oilOrders};
-let managerOrdersInitialized=false;
 let managerOrdersCache={};
-let managerAlertTimer=null;
-function playManagerAlert(desc){
-  const sound=document.getElementById("manager-alert-sound");
-  const ring=()=>{ if(sound){ sound.currentTime=0; sound.play().catch(()=>{}); } try{ if(navigator.vibrate) navigator.vibrate([800,300,800,300,1200]); }catch(e){} };
-  ring();
-  if(managerAlertTimer) clearInterval(managerAlertTimer);
-  managerAlertTimer=setInterval(ring,1700);
-  const box=document.getElementById("manager-alert");
-  const text=document.getElementById("manager-alert-text");
-  if(box) box.classList.remove("hidden");
-  if(text) text.textContent=desc||"وصل طلب جديد إلى النظام";
-}
-function stopManagerAlert(){
-  if(managerAlertTimer){clearInterval(managerAlertTimer);managerAlertTimer=null;}
-  const sound=document.getElementById("manager-alert-sound"); if(sound){sound.pause();sound.currentTime=0;}
-  document.getElementById("manager-alert")?.classList.add("hidden");
-}
-document.getElementById("manager-alert-close")?.addEventListener("click",()=>{stopManagerAlert();switchTab("all-orders")});
-window.addEventListener("pointerdown",()=>{
-  const a=document.getElementById("manager-alert-sound");
-  if(a){a.muted=true;a.play().then(()=>{a.pause();a.currentTime=0;a.muted=false}).catch(()=>{});}
-  if("Notification" in window && Notification.permission!=="granted") Notification.requestPermission().catch(()=>{});
-},{once:true});
 onValue(ref(db,"orders"),snap=>{
   allOrdersCache={};
   const incoming={};
   if(snap.exists()) snap.forEach(c=>{allOrdersCache[c.key]=c.val();incoming[c.key]=c.val();});
-  if(managerOrdersInitialized){
-    for(const [id,o] of Object.entries(incoming)){
-      if(!managerOrdersCache[id] && o && (o.status==="جارية" || o.status==="تم إرسال الطلب")){
-        const desc=`طلب جديد: ${o.customerName||"عميل"} - ${o.carName||""}`;
-        playManagerAlert(desc);
-        if("Notification" in window && Notification.permission==="granted") { try{new Notification("طلب جديد 🚗",{body:desc,requireInteraction:true});}catch(e){} }
-        break;
-      }
-    }
-  }
   managerOrdersCache=incoming;
-  managerOrdersInitialized=true;
   renderOrders();filterReport();
 });
 applyLanguage();
