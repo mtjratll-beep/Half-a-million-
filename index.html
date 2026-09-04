@@ -169,7 +169,8 @@ footer{display:none!important}
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, onValue, update, remove, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCNgBpEMZ1WGQ9zkbJQDb9y6OJweFqWNpg",
@@ -184,6 +185,8 @@ footer{display:none!important}
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        const messaging = getMessaging(app);
+        const FCM_VAPID_KEY = "REPLACE_WITH_FIREBASE_WEB_PUSH_CERTIFICATE_KEY_PAIR_PUBLIC_KEY";
 
         let currentWorkerId = sessionStorage.getItem("worker_id");
         let currentWorkerName = sessionStorage.getItem("worker_name");
@@ -234,6 +237,36 @@ footer{display:none!important}
             btn.textContent = soundEnabled ? t.soundEnabled : t.enableSound;
             btn.className = 'sound-btn text-white shadow-lg transition ' + (soundEnabled ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-amber-500 hover:bg-amber-600');
         }
+
+        async function registerWorkerPush(){
+            if (!currentWorkerId || !currentWorkerName || !('serviceWorker' in navigator) || !('Notification' in window)) return;
+            if (FCM_VAPID_KEY.startsWith('REPLACE_')) {
+                console.warn('FCM VAPID public key is not configured yet.');
+                return;
+            }
+            try {
+                const registration = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
+                const permission = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
+                if (permission !== 'granted') return;
+                const token = await getToken(messaging, { vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: registration });
+                if (token) {
+                    await set(ref(db, `workerTokens/${currentWorkerId}/${encodeURIComponent(token)}`), { token, workerName: currentWorkerName, updatedAt: Date.now() });
+                    console.log('Worker push token registered');
+                }
+            } catch (e) { console.warn('Push registration failed', e); }
+        }
+
+        onMessage(messaging, (payload) => {
+            const title = payload?.notification?.title || 'طلب خدمة جديد 🚗';
+            const body = payload?.notification?.body || 'يوجد طلب جديد مسند إليك';
+            if (soundEnabled) {
+                try { const a = document.getElementById('alert-sound'); if (a) { a.currentTime = 0; a.play().catch(()=>{}); } } catch(e) {}
+            }
+            try { if (navigator.vibrate) navigator.vibrate([500,250,500]); } catch(e) {}
+            if ('Notification' in window && Notification.permission === 'granted') {
+                try { new Notification(title, { body, icon: 'https://cdn-icons-png.flaticon.com/512/2961/2961218.png' }); } catch(e) {}
+            }
+        });
 
         async function enableSoundForever(){
             const a=document.getElementById('alert-sound');
@@ -464,6 +497,7 @@ footer{display:none!important}
                     currentWorkerId = foundId;
                     currentWorkerName = foundWorker.name;
                     showDashboard(foundWorker.name);
+                    registerWorkerPush();
                 } else {
                     alert("رقم الجوال أو كلمة المرور غير صحيحة!");
                 }
@@ -475,6 +509,7 @@ footer{display:none!important}
             document.getElementById('worker-dashboard').classList.remove('hidden');
             document.getElementById('worker-welcome-text').innerText = `${translations[currentLang].welcome} ${name}`;
             listenToAssignedOrders(name);
+            registerWorkerPush();
         }
 
         window.workerLogout = function() {
